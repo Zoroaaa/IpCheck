@@ -246,7 +246,7 @@ export default {
 };
 
 // =====================================================
-//  导航首页（新增，两个工具统一入口）
+//  导航首页（优化版，统一入口）
 // =====================================================
 function renderHomePage(hostname, ico, pathToken) {
   const base = pathToken ? `/${pathToken}` : '';
@@ -257,60 +257,124 @@ function renderHomePage(hostname, ico, pathToken) {
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Proxy Checker - 代理检测服务</title>
 <link rel="icon" href="${ico}" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+:root{--primary:#6366f1;--primary-dark:#4f46e5;--secondary:#22c55e;--accent:#f59e0b;--bg-dark:#0f172a;--bg-card:rgba(30,41,59,.7);--text-primary:#f1f5f9;--text-secondary:#94a3b8;--border-color:rgba(148,163,184,.15);--glow-primary:rgba(99,102,241,.4);--glow-secondary:rgba(34,197,94,.4)}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-.wrap{max-width:900px;width:100%}
-.hero{text-align:center;margin-bottom:60px;color:#fff}
-.hero h1{font-size:clamp(2rem,5vw,3.5rem);font-weight:700;background:linear-gradient(135deg,#e0f2fe,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:16px}
-.hero p{font-size:1.1rem;color:rgba(255,255,255,.7);max-width:600px;margin:0 auto}
-.cards{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-bottom:50px}
-.card{background:rgba(255,255,255,.07);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:40px 32px;text-decoration:none;color:#fff;transition:all .3s;display:flex;flex-direction:column;gap:20px}
-.card:hover{transform:translateY(-8px);background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3);box-shadow:0 20px 40px rgba(0,0,0,.3)}
-.card-icon{font-size:3rem}
-.card h2{font-size:1.5rem;font-weight:700}
-.card p{color:rgba(255,255,255,.7);line-height:1.7;font-size:.95rem}
-.card-link{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);padding:10px 20px;border-radius:10px;font-size:.9rem;font-weight:600;transition:all .3s;margin-top:auto;width:fit-content}
-.card:hover .card-link{background:rgba(255,255,255,.25);border-color:rgba(255,255,255,.4)}
-.card-blue{border-top:3px solid #3b82f6}
-.card-green{border-top:3px solid #22c55e}
-.api-box{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:32px}
-.api-box h3{color:#e0f2fe;font-size:1.2rem;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.1)}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg-dark);min-height:100vh;color:var(--text-primary);overflow-x:hidden}
+body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 20% 20%,rgba(99,102,241,.15) 0%,transparent 50%),radial-gradient(ellipse at 80% 80%,rgba(34,197,94,.1) 0%,transparent 50%),radial-gradient(ellipse at 50% 50%,rgba(245,158,11,.05) 0%,transparent 70%);pointer-events:none;z-index:0}
+.nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:16px 24px;background:rgba(15,23,42,.8);backdrop-filter:blur(20px);border-bottom:1px solid var(--border-color)}
+.nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--text-primary)}
+.nav-logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--primary),var(--secondary));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem}
+.nav-logo-text{font-size:1.25rem;font-weight:700;letter-spacing:-.02em}
+.nav-links{display:flex;gap:8px}
+.nav-link{padding:10px 20px;border-radius:10px;text-decoration:none;font-weight:500;font-size:.9rem;transition:all .25s ease;color:var(--text-secondary);background:transparent;border:1px solid transparent}
+.nav-link:hover{color:var(--text-primary);background:rgba(255,255,255,.05);border-color:var(--border-color)}
+.nav-link.active{color:var(--primary);background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.3)}
+.nav-link.active-green{color:var(--secondary);background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3)}
+.main{position:relative;z-index:1;padding:120px 24px 60px;max-width:1200px;margin:0 auto}
+.hero{text-align:center;margin-bottom:80px}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.2);border-radius:100px;font-size:.85rem;color:var(--primary);margin-bottom:24px}
+.hero-badge-dot{width:8px;height:8px;background:var(--primary);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.hero h1{font-size:clamp(2.5rem,6vw,4rem);font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-bottom:24px;background:linear-gradient(135deg,var(--text-primary) 0%,var(--primary) 50%,var(--secondary) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:1.2rem;color:var(--text-secondary);max-width:600px;margin:0 auto;line-height:1.7}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;margin-bottom:80px}
+.card{position:relative;background:var(--bg-card);backdrop-filter:blur(20px);border:1px solid var(--border-color);border-radius:24px;padding:40px;text-decoration:none;color:var(--text-primary);transition:all .4s cubic-bezier(.4,0,.2,1);overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--primary),var(--secondary));opacity:0;transition:opacity .3s}
+.card:hover{transform:translateY(-8px);border-color:rgba(99,102,241,.3);box-shadow:0 25px 50px -12px rgba(0,0,0,.5),0 0 0 1px rgba(99,102,241,.1)}
+.card:hover::before{opacity:1}
+.card-icon{width:64px;height:64px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:2rem;margin-bottom:24px}
+.card-icon-blue{background:linear-gradient(135deg,rgba(99,102,241,.2),rgba(99,102,241,.05));border:1px solid rgba(99,102,241,.2)}
+.card-icon-green{background:linear-gradient(135deg,rgba(34,197,94,.2),rgba(34,197,94,.05));border:1px solid rgba(34,197,94,.2)}
+.card h2{font-size:1.5rem;font-weight:700;margin-bottom:12px;letter-spacing:-.02em}
+.card p{color:var(--text-secondary);line-height:1.7;font-size:.95rem;margin-bottom:24px}
+.card-footer{display:flex;align-items:center;justify-content:space-between;padding-top:24px;border-top:1px solid var(--border-color)}
+.card-link{display:inline-flex;align-items:center;gap:8px;color:var(--primary);font-weight:600;font-size:.9rem;transition:gap .25s}
+.card:hover .card-link{gap:12px}
+.card-arrow{font-size:1.2rem;transition:transform .25s}
+.card:hover .card-arrow{transform:translateX(4px)}
+.card-features{display:flex;gap:8px;flex-wrap:wrap}
+.card-feature{padding:4px 12px;background:rgba(255,255,255,.05);border-radius:100px;font-size:.75rem;color:var(--text-secondary)}
+.api-section{background:var(--bg-card);backdrop-filter:blur(20px);border:1px solid var(--border-color);border-radius:24px;padding:40px;margin-bottom:40px}
+.api-header{display:flex;align-items:center;gap:16px;margin-bottom:32px}
+.api-header-icon{width:48px;height:48px;background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(245,158,11,.05));border:1px solid rgba(245,158,11,.2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+.api-header h3{font-size:1.5rem;font-weight:700;letter-spacing:-.02em}
 .api-table{width:100%;border-collapse:collapse}
-.api-table th{color:rgba(255,255,255,.5);font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:8px 12px;text-align:left;border-bottom:1px solid rgba(255,255,255,.1)}
-.api-table td{padding:10px 12px;color:rgba(255,255,255,.8);font-size:.9rem;border-bottom:1px solid rgba(255,255,255,.05)}
+.api-table th{color:var(--text-secondary);font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;padding:16px;text-align:left;border-bottom:1px solid var(--border-color)}
+.api-table td{padding:16px;border-bottom:1px solid var(--border-color);font-size:.9rem}
 .api-table tr:last-child td{border-bottom:none}
-.api-table code{background:rgba(255,255,255,.1);padding:2px 8px;border-radius:4px;font-family:monospace;font-size:.85rem;color:#a5f3fc}
-.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.75rem;font-weight:600}
-.badge-get{background:rgba(34,197,94,.2);color:#4ade80;border:1px solid rgba(34,197,94,.3)}
-.footer{text-align:center;color:rgba(255,255,255,.4);font-size:.85rem;margin-top:40px}
-@media(max-width:640px){.cards{grid-template-columns:1fr}}
+.api-table tr:hover td{background:rgba(255,255,255,.02)}
+.api-table code{background:rgba(99,102,241,.1);padding:4px 10px;border-radius:6px;font-family:'SF Mono',Monaco,monospace;font-size:.85rem;color:#a5b4fc}
+.badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:6px;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.badge-get{background:rgba(34,197,94,.15);color:#4ade80}
+.footer{text-align:center;padding:40px 0;color:var(--text-secondary);font-size:.9rem;border-top:1px solid var(--border-color)}
+.footer a{color:var(--primary);text-decoration:none}
+.footer a:hover{text-decoration:underline}
+@media(max-width:768px){.nav{padding:12px 16px}.nav-links{display:none}.main{padding:100px 16px 40px}.cards{grid-template-columns:1fr;gap:16px}.card{padding:24px}.hero{margin-bottom:48px}.hero h1{font-size:2rem}.hero p{font-size:1rem}.api-section{padding:24px}}
 </style>
 </head>
 <body>
-<div class="wrap">
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="${base}/" class="nav-logo">
+      <div class="nav-logo-icon">🛡️</div>
+      <span class="nav-logo-text">Proxy Checker</span>
+    </a>
+    <div class="nav-links">
+      <a href="${base}/" class="nav-link active">首页</a>
+      <a href="${base}/proxyip" class="nav-link">ProxyIP</a>
+      <a href="${base}/proxy" class="nav-link">SOCKS5/HTTP</a>
+    </div>
+  </div>
+</nav>
+
+<main class="main">
   <div class="hero">
-    <h1>🛡️ Proxy Checker</h1>
-    <p>高性能代理验证服务，基于 Cloudflare Workers 边缘计算平台，支持 ProxyIP、SOCKS5、HTTP 代理检测</p>
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      Cloudflare Workers 边缘计算
+    </div>
+    <h1>高性能代理验证服务</h1>
+    <p>支持 ProxyIP、SOCKS5、HTTP 代理检测，提供完整的 IP 信息查询与风险评估</p>
   </div>
 
   <div class="cards">
-    <a href="${base}/proxyip" class="card card-blue">
-      <div class="card-icon">🌐</div>
+    <a href="${base}/proxyip" class="card">
+      <div class="card-icon card-icon-blue">🌐</div>
       <h2>Check ProxyIP</h2>
       <p>检测能够反向代理 Cloudflare IP 段的第三方服务器，专为 edgetunnel / epeius 等项目提供 ProxyIP 可用性验证。</p>
-      <div class="card-link">进入检测 →</div>
+      <div class="card-footer">
+        <span class="card-link">进入检测 <span class="card-arrow">→</span></span>
+        <div class="card-features">
+          <span class="card-feature">TLS 验证</span>
+          <span class="card-feature">自动重试</span>
+        </div>
+      </div>
     </a>
-    <a href="${base}/proxy" class="card card-green">
-      <div class="card-icon">🔌</div>
+    <a href="${base}/proxy" class="card">
+      <div class="card-icon card-icon-green">🔌</div>
       <h2>Check SOCKS5/HTTP</h2>
       <p>检测 SOCKS5 和 HTTP 代理的连通性，获取代理入口/出口的 IP 信息、地理位置、ASN 和风险评分。</p>
-      <div class="card-link">进入检测 →</div>
+      <div class="card-footer">
+        <span class="card-link">进入检测 <span class="card-arrow">→</span></span>
+        <div class="card-features">
+          <span class="card-feature">风险评估</span>
+          <span class="card-feature">ASN 信息</span>
+        </div>
+      </div>
     </a>
   </div>
 
-  <div class="api-box">
-    <h3>📡 API 接口一览</h3>
+  <div class="api-section">
+    <div class="api-header">
+      <div class="api-header-icon">📡</div>
+      <h3>API 接口一览</h3>
+    </div>
     <table class="api-table">
       <thead>
         <tr><th>方法</th><th>路径</th><th>说明</th></tr>
@@ -326,10 +390,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:linear-gradient(135d
     </table>
   </div>
 
-  <div class="footer">
-    © 2025 Proxy Checker · 基于 Cloudflare Workers 构建
-  </div>
-</div>
+  <footer class="footer">
+    © 2025 Proxy Checker · 基于 <a href="https://workers.cloudflare.com/" target="_blank">Cloudflare Workers</a> 构建
+  </footer>
+</main>
 </body>
 </html>`;
 }

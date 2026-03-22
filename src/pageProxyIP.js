@@ -1,26 +1,29 @@
 // ============================================================
-//  pageProxyIP.js — ProxyIP 检测前端页面
+//  pageProxyIP.js — ProxyIP 检测前端页面（优化版）
 //  注意：前端 ip-info 调用现在使用 ipapi.is 格式的响应字段
 // ============================================================
 
 export function renderProxyIPPage(hostname, ico, pathToken) {
+  const base = pathToken ? `/${pathToken}` : '';
   const tokenBadge = pathToken ? `<div class="token-badge">🔑 TOKEN验证通过</div>` : '';
-  const secureSubtitle = pathToken ? `<div class="subtitle">🔒 安全模式 - 路径TOKEN验证已启用</div>` : '';
-  const footerToken = pathToken ? `<p style="margin-top:4px;opacity:.6">🔒 当前会话已通过TOKEN验证</p>` : '';
-  const curlExample = `https://${hostname}${pathToken ? '/' + pathToken : ''}/check?proxyip=1.2.3.4:443`;
-  const tokenSection = `
-    <h3 style="color:var(--text-primary);margin:24px 0 16px">🔐 TOKEN访问方式</h3>
-    <div style="background:linear-gradient(135deg,#e3f2fd,#bbdefb);padding:20px;border-radius:var(--border-radius-sm);border-left:4px solid var(--primary-color)">
-      <p style="margin-bottom:12px;color:#1565c0;font-weight:600">路径TOKEN访问（推荐）:</p>
-      <div class="code-block" style="background:#1e3a8a;color:#e0f2fe">
-https://${hostname}/<span class="highlight">${pathToken || '你的TOKEN'}</span><br>
-https://${hostname}/<span class="highlight">${pathToken || '你的TOKEN'}</span>/check?proxyip=1.2.3.4
+  const curlExample = `https://${hostname}${base}/check?proxyip=1.2.3.4:443`;
+  const tokenSection = pathToken ? `
+    <div class="doc-card">
+      <div class="doc-card-header">
+        <span class="doc-card-icon">🔐</span>
+        <h3>TOKEN 访问方式</h3>
       </div>
-      <p style="margin:16px 0 12px;color:#1565c0;font-weight:600">参数TOKEN访问:</p>
-      <div class="code-block" style="background:#1e3a8a;color:#e0f2fe">
-https://${hostname}/check?proxyip=1.2.3.4&amp;token=<span class="highlight">${pathToken || '你的TOKEN'}</span>
+      <div class="token-grid">
+        <div class="token-item">
+          <div class="token-label">路径 TOKEN（推荐）</div>
+          <div class="code-inline">https://${hostname}/<span class="highlight">${pathToken}</span>/check?proxyip=...</div>
+        </div>
+        <div class="token-item">
+          <div class="token-label">参数 TOKEN</div>
+          <div class="code-inline">https://${hostname}/check?proxyip=...&token=<span class="highlight">${pathToken}</span></div>
+        </div>
       </div>
-    </div>`;
+    </div>` : '';
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -31,87 +34,130 @@ https://${hostname}/check?proxyip=1.2.3.4&amp;token=<span class="highlight">${pa
   <link rel="icon" href="${ico}" type="image/x-icon">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root{--primary-color:#3498db;--primary-dark:#2980b9;--secondary-color:#1abc9c;--success-color:#2ecc71;--warning-color:#f39c12;--error-color:#e74c3c;--bg-primary:#ffffff;--bg-secondary:#f8f9fa;--bg-tertiary:#e9ecef;--text-primary:#2c3e50;--text-secondary:#6c757d;--text-light:#adb5bd;--border-color:#dee2e6;--shadow-sm:0 2px 4px rgba(0,0,0,.1);--shadow-md:0 4px 6px rgba(0,0,0,.1);--shadow-lg:0 10px 25px rgba(0,0,0,.15);--border-radius:12px;--border-radius-sm:8px;--transition:all .3s cubic-bezier(.4,0,.2,1)}
+    :root{--primary:#6366f1;--primary-dark:#4f46e5;--primary-light:#818cf8;--secondary:#22c55e;--accent:#f59e0b;--success:#10b981;--warning:#f59e0b;--error:#ef4444;--bg-dark:#0f172a;--bg-card:rgba(30,41,59,.7);--bg-input:#1e293b;--text-primary:#f1f5f9;--text-secondary:#94a3b8;--text-muted:#64748b;--border-color:rgba(148,163,184,.15);--border-focus:rgba(99,102,241,.5);--glow-primary:rgba(99,102,241,.4)}
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;color:var(--text-primary);background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;overflow-x:hidden}
-    .container{max-width:1000px;margin:0 auto;padding:20px}
-    .header{text-align:center;margin-bottom:50px;animation:fadeInDown .8s ease-out}
-    .main-title{font-size:clamp(2.5rem,5vw,4rem);font-weight:700;background:linear-gradient(135deg,#fff 0%,#f0f0f0 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:16px}
-    .subtitle{font-size:1.2rem;color:rgba(255,255,255,.9);font-weight:400;margin-bottom:8px}
-    .badge{display:inline-block;background:rgba(255,255,255,.2);backdrop-filter:blur(10px);padding:8px 16px;border-radius:50px;color:#fff;font-size:.9rem;font-weight:500;border:1px solid rgba(255,255,255,.3)}
-    .card{background:var(--bg-primary);border-radius:var(--border-radius);padding:32px;box-shadow:var(--shadow-lg);margin-bottom:32px;border:1px solid var(--border-color);animation:fadeInUp .8s ease-out;position:relative;overflow:hidden}
-    .card::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--primary-color),var(--secondary-color))}
-    .card:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,.15)}
-    .form-label{display:block;font-weight:600;font-size:1.1rem;margin-bottom:12px;color:var(--text-primary)}
-    .input-group{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}
-    .input-wrapper{flex:1;min-width:300px}
-    .form-input{width:100%;padding:16px 20px;border:2px solid var(--border-color);border-radius:var(--border-radius-sm);font-size:16px;font-family:inherit;transition:var(--transition);background:var(--bg-primary);color:var(--text-primary)}
-    .form-input:focus{outline:none;border-color:var(--primary-color);box-shadow:0 0 0 4px rgba(52,152,219,.1);transform:translateY(-1px)}
-    .form-input::placeholder{color:var(--text-light)}
-    .btn{padding:16px 32px;border:none;border-radius:var(--border-radius-sm);font-size:16px;font-weight:600;font-family:inherit;cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:120px;position:relative;overflow:hidden}
-    .btn::before{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);transition:left .6s}
-    .btn:hover::before{left:100%}
-    .btn-primary{background:linear-gradient(135deg,var(--primary-color),var(--primary-dark));color:#fff;box-shadow:var(--shadow-md)}
-    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(52,152,219,.3)}
-    .btn-primary:disabled{background:var(--text-light);cursor:not-allowed;transform:none}
+    html{scroll-behavior:smooth}
+    body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg-dark);min-height:100vh;color:var(--text-primary);overflow-x:hidden}
+    body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 30% 20%,rgba(99,102,241,.12) 0%,transparent 50%),radial-gradient(ellipse at 70% 80%,rgba(34,197,94,.08) 0%,transparent 50%);pointer-events:none;z-index:0}
+    .nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:16px 24px;background:rgba(15,23,42,.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border-color)}
+    .nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between}
+    .nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--text-primary)}
+    .nav-logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--primary),var(--secondary));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem}
+    .nav-logo-text{font-size:1.25rem;font-weight:700;letter-spacing:-.02em}
+    .nav-links{display:flex;gap:8px}
+    .nav-link{padding:10px 20px;border-radius:10px;text-decoration:none;font-weight:500;font-size:.9rem;transition:all .25s ease;color:var(--text-secondary);background:transparent;border:1px solid transparent}
+    .nav-link:hover{color:var(--text-primary);background:rgba(255,255,255,.05);border-color:var(--border-color)}
+    .nav-link.active{color:var(--primary);background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.3)}
+    .main{position:relative;z-index:1;padding:120px 24px 60px;max-width:1000px;margin:0 auto}
+    .hero{text-align:center;margin-bottom:48px}
+    .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.2);border-radius:100px;font-size:.85rem;color:var(--primary-light);margin-bottom:20px}
+    .hero h1{font-size:clamp(2rem,5vw,3rem);font-weight:800;letter-spacing:-.03em;line-height:1.2;margin-bottom:12px;background:linear-gradient(135deg,var(--text-primary) 0%,var(--primary-light) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .hero p{font-size:1.1rem;color:var(--text-secondary);max-width:500px;margin:0 auto}
+    .card{background:var(--bg-card);backdrop-filter:blur(20px);border:1px solid var(--border-color);border-radius:20px;padding:32px;margin-bottom:24px;position:relative;overflow:hidden}
+    .card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--primary),var(--secondary))}
+    .form-section{margin-bottom:0}
+    .form-label{display:block;font-weight:600;font-size:1rem;margin-bottom:12px;color:var(--text-primary)}
+    .input-group{display:flex;gap:12px;align-items:stretch}
+    .input-wrapper{flex:1}
+    .form-input{width:100%;padding:16px 20px;border:2px solid var(--border-color);border-radius:12px;font-size:16px;font-family:inherit;transition:all .25s ease;background:var(--bg-input);color:var(--text-primary)}
+    .form-input:focus{outline:none;border-color:var(--border-focus);box-shadow:0 0 0 4px rgba(99,102,241,.1)}
+    .form-input::placeholder{color:var(--text-muted)}
+    .btn{padding:16px 32px;border:none;border-radius:12px;font-size:16px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .25s ease;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:120px}
+    .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;box-shadow:0 4px 15px rgba(99,102,241,.3)}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(99,102,241,.4)}
+    .btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none}
     .loading-spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,.3);border-top:2px solid #fff;border-radius:50%;animation:spin 1s linear infinite}
-    .result-section{margin-top:32px;opacity:0;transform:translateY(20px);transition:var(--transition)}
+    @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+    .result-section{margin-top:24px;opacity:0;transform:translateY(20px);transition:all .4s ease}
     .result-section.show{opacity:1;transform:translateY(0)}
-    .result-card{border-radius:var(--border-radius-sm);padding:24px;margin-bottom:16px;border-left:4px solid;position:relative;overflow:hidden}
-    .result-success{background:linear-gradient(135deg,#d4edda,#c3e6cb);border-color:var(--success-color);color:#155724}
-    .result-error{background:linear-gradient(135deg,#f8d7da,#f5c6cb);border-color:var(--error-color);color:#721c24}
-    .result-warning{background:linear-gradient(135deg,#fff3cd,#ffeaa7);border-color:var(--warning-color);color:#856404}
-    .ip-grid{display:grid;gap:16px;margin-top:20px}
-    .ip-item{background:rgba(255,255,255,.9);border:1px solid var(--border-color);border-radius:var(--border-radius-sm);padding:20px;transition:var(--transition)}
-    .ip-item:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+    .result-card{border-radius:16px;padding:24px;margin-bottom:16px;border-left:4px solid;position:relative}
+    .result-success{background:rgba(16,185,129,.1);border-color:var(--success);color:#d1fae5}
+    .result-error{background:rgba(239,68,68,.1);border-color:var(--error);color:#fecaca}
+    .result-warning{background:rgba(245,158,11,.1);border-color:var(--warning);color:#fde68a}
+    .result-card h3{font-size:1.2rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+    .result-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px;font-size:.95rem}
+    .result-row strong{color:var(--text-secondary);font-weight:500}
+    .copy-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);padding:6px 12px;border-radius:8px;font-size:13px;cursor:pointer;transition:all .2s;color:var(--text-primary);font-family:inherit}
+    .copy-btn:hover{background:var(--primary);border-color:var(--primary)}
+    .copy-btn.copied{background:var(--success);border-color:var(--success)}
+    .tag{padding:4px 10px;border-radius:100px;font-size:12px;font-weight:500}
+    .tag-country{background:rgba(99,102,241,.2);color:var(--primary-light)}
+    .tag-as{background:rgba(34,197,94,.2);color:#4ade80}
+    .ip-grid{display:grid;gap:12px;margin-top:16px}
+    .ip-item{background:rgba(255,255,255,.05);border:1px solid var(--border-color);border-radius:12px;padding:16px;transition:all .2s}
+    .ip-item:hover{background:rgba(255,255,255,.08)}
+    .ip-item.valid{background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.3)}
+    .ip-item.invalid{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3)}
     .ip-status-line{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-    .status-icon{font-size:18px;margin-left:auto}
-    .copy-btn{background:var(--bg-secondary);border:1px solid var(--border-color);padding:6px 12px;border-radius:6px;font-size:14px;cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;gap:4px;margin:4px 0}
-    .copy-btn:hover{background:var(--primary-color);color:#fff;border-color:var(--primary-color)}
-    .copy-btn.copied{background:var(--success-color);color:#fff;border-color:var(--success-color)}
-    .tag{padding:4px 8px;border-radius:16px;font-size:12px;font-weight:500}
-    .tag-country{background:#e3f2fd;color:#1976d2}
-    .tag-as{background:#f3e5f5;color:#7b1fa2}
-    .api-docs{background:var(--bg-primary);border-radius:var(--border-radius);padding:32px;box-shadow:var(--shadow-lg);animation:fadeInUp .8s ease-out .2s both}
-    .section-title{font-size:1.8rem;font-weight:700;color:var(--text-primary);margin-bottom:24px;position:relative;padding-bottom:12px}
-    .section-title::after{content:"";position:absolute;bottom:0;left:0;width:60px;height:3px;background:linear-gradient(90deg,var(--primary-color),var(--secondary-color));border-radius:2px}
-    .code-block{background:#2d3748;color:#e2e8f0;padding:20px;border-radius:var(--border-radius-sm);font-family:'Monaco','Menlo','Ubuntu Mono',monospace;font-size:14px;overflow-x:auto;margin:16px 0;border:1px solid #4a5568;position:relative}
-    .code-block::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#48bb78,#38b2ac)}
-    .highlight{color:#f56565;font-weight:600}
-    .footer{text-align:center;padding:20px;color:rgba(255,255,255,.8);font-size:14px;margin-top:40px;border-top:1px solid rgba(255,255,255,.1)}
-    .token-badge{position:fixed;top:20px;left:20px;background:linear-gradient(135deg,var(--success-color),var(--secondary-color));color:#fff;padding:8px 16px;border-radius:20px;font-size:14px;font-weight:600;z-index:1000;box-shadow:var(--shadow-md)}
-    .toast{position:fixed;bottom:20px;right:20px;background:var(--text-primary);color:#fff;padding:12px 20px;border-radius:var(--border-radius-sm);box-shadow:var(--shadow-lg);transform:translateY(100px);opacity:0;transition:var(--transition);z-index:1000}
+    .status-badge{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600}
+    .status-badge.success{background:var(--success);color:#fff}
+    .status-badge.error{background:var(--error);color:#fff}
+    .doc-card{background:var(--bg-card);backdrop-filter:blur(20px);border:1px solid var(--border-color);border-radius:20px;padding:32px;margin-bottom:24px}
+    .doc-card-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+    .doc-card-icon{width:40px;height:40px;background:linear-gradient(135deg,rgba(99,102,241,.2),rgba(99,102,241,.05));border:1px solid rgba(99,102,241,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+    .doc-card h2{font-size:1.5rem;font-weight:700;letter-spacing:-.02em}
+    .doc-card h3{font-size:1.1rem;font-weight:600;color:var(--text-primary);margin:24px 0 12px}
+    .doc-card p{color:var(--text-secondary);line-height:1.7;margin-bottom:16px}
+    .code-block{background:var(--bg-input);color:var(--text-primary);padding:20px;border-radius:12px;font-family:'SF Mono',Monaco,monospace;font-size:14px;overflow-x:auto;margin:16px 0;border:1px solid var(--border-color)}
+    .code-block .highlight{color:var(--primary-light);font-weight:600}
+    .code-block .method{color:#4ade80;font-weight:600}
+    .code-inline{background:var(--bg-input);padding:8px 12px;border-radius:8px;font-family:'SF Mono',Monaco,monospace;font-size:13px;display:block;margin-top:8px;border:1px solid var(--border-color)}
+    .code-inline .highlight{color:var(--primary-light);font-weight:600}
+    .token-grid{display:grid;gap:16px}
+    .token-item{background:rgba(255,255,255,.03);padding:16px;border-radius:12px;border:1px solid var(--border-color)}
+    .token-label{font-size:.85rem;color:var(--text-muted);margin-bottom:8px}
+    .flow-diagram{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;padding:20px;background:rgba(255,255,255,.03);border-radius:12px;margin:16px 0}
+    .flow-item{background:rgba(99,102,241,.1);padding:12px 16px;border-radius:10px;text-align:center;border:1px solid rgba(99,102,241,.2)}
+    .flow-item .title{font-weight:600;font-size:.9rem;color:var(--primary-light)}
+    .flow-item .desc{font-size:.75rem;color:var(--text-muted);margin-top:4px}
+    .flow-arrow{color:var(--text-muted);font-size:1.5rem}
+    .feature-list{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:12px;padding:20px;margin:16px 0}
+    .feature-list ul{margin:0;padding-left:20px;color:#a7f3d0;line-height:1.8}
+    .footer{text-align:center;padding:40px 0;color:var(--text-muted);font-size:.9rem;border-top:1px solid var(--border-color);margin-top:40px}
+    .token-badge{position:fixed;top:80px;left:24px;background:linear-gradient(135deg,var(--success),#059669);color:#fff;padding:8px 16px;border-radius:20px;font-size:14px;font-weight:600;z-index:999;box-shadow:0 4px 15px rgba(16,185,129,.3)}
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--bg-card);backdrop-filter:blur(20px);color:var(--text-primary);padding:14px 20px;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.3);transform:translateY(100px);opacity:0;transition:all .3s ease;z-index:1001;border:1px solid var(--border-color)}
     .toast.show{transform:translateY(0);opacity:1}
     .tooltip{position:relative;display:inline-block;cursor:help}
-    .tooltip .tooltiptext{visibility:hidden;width:420px;background:#2c3e50;color:#fff;text-align:left;border-radius:8px;padding:12px 16px;position:fixed;z-index:9999;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0;transition:opacity .3s;box-shadow:0 4px 20px rgba(0,0,0,.3);font-size:14px;max-width:90vw}
+    .tooltip .tooltiptext{visibility:hidden;width:320px;background:var(--bg-card);backdrop-filter:blur(20px);color:var(--text-primary);text-align:left;border-radius:12px;padding:14px 18px;position:fixed;z-index:9999;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0;transition:opacity .3s;box-shadow:0 10px 40px rgba(0,0,0,.4);font-size:13px;border:1px solid var(--border-color)}
     .tooltip:hover .tooltiptext{visibility:visible;opacity:1}
-    @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
-    @keyframes fadeInDown{from{opacity:0;transform:translateY(-30px)}to{opacity:1;transform:translateY(0)}}
-    @keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
-    @media(max-width:768px){.container{padding:16px}.card{padding:24px}.input-group{flex-direction:column}.input-wrapper{min-width:auto}.btn{width:100%}}
+    @media(max-width:768px){.nav{padding:12px 16px}.nav-links{display:none}.main{padding:100px 16px 40px}.card,.doc-card{padding:20px}.input-group{flex-direction:column}.btn{width:100%}.hero h1{font-size:1.75rem}.flow-diagram{flex-direction:column}.flow-arrow{transform:rotate(90deg)}}
   </style>
 </head>
 <body>
   ${tokenBadge}
+  
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="${base}/" class="nav-logo">
+        <div class="nav-logo-icon">🛡️</div>
+        <span class="nav-logo-text">Proxy Checker</span>
+      </a>
+      <div class="nav-links">
+        <a href="${base}/" class="nav-link">首页</a>
+        <a href="${base}/proxyip" class="nav-link active">ProxyIP</a>
+        <a href="${base}/proxy" class="nav-link">SOCKS5/HTTP</a>
+      </div>
+    </div>
+  </nav>
 
-  <div class="container">
-    <header class="header">
-      <h1 class="main-title">Check ProxyIP</h1>
-      ${secureSubtitle}
-      <div class="badge">🌍 基于 Cloudflare Workers 边缘计算</div>
-    </header>
+  <main class="main">
+    <div class="hero">
+      <div class="hero-badge">🌐 ProxyIP 检测</div>
+      <h1>Check ProxyIP</h1>
+      <p>检测能够反向代理 Cloudflare IP 段的第三方服务器</p>
+    </div>
 
     <div class="card">
-      <div class="form-section" style="margin-bottom:32px">
-        <label for="proxyip" class="form-label">🔍 输入 ProxyIP 地址</label>
+      <div class="form-section">
+        <label for="proxyip" class="form-label">输入 ProxyIP 地址</label>
         <div class="input-group">
           <div class="input-wrapper">
             <input type="text" id="proxyip" class="form-input" placeholder="例如: 1.2.3.4:443 或 example.com" autocomplete="off">
           </div>
           <button id="checkBtn" class="btn btn-primary" onclick="checkProxyIP()">
-            <span class="btn-text">检测</span>
+            <span class="btn-text">开始检测</span>
             <div class="loading-spinner" style="display:none"></div>
           </button>
         </div>
@@ -119,32 +165,30 @@ https://${hostname}/check?proxyip=1.2.3.4&amp;token=<span class="highlight">${pa
       <div id="result" class="result-section"></div>
     </div>
 
-    <!-- ProxyIP 概念说明 -->
-    <div class="api-docs">
-      <h2 class="section-title">🤔 什么是 ProxyIP ？</h2>
-      <h3 style="color:var(--text-primary);margin:24px 0 16px">📖 ProxyIP 概念</h3>
-      <p style="margin-bottom:16px;line-height:1.8;color:var(--text-secondary)">
-        在 Cloudflare Workers 环境中，ProxyIP 特指那些能够成功代理连接到 Cloudflare 服务的第三方 IP 地址。
-      </p>
-      <h3 style="color:var(--text-primary);margin:24px 0 16px">🔧 技术原理</h3>
-      <p style="margin-bottom:16px;line-height:1.8;color:var(--text-secondary)">
-        根据 Cloudflare Workers 的 <a href="https://developers.cloudflare.com/workers/runtime-apis/tcp-sockets/" target="_blank" style="color:var(--primary-color);text-decoration:none">TCP Sockets 官方文档</a> 说明，Cloudflare Workers 无法直接连接到 Cloudflare 自有 IP 段，需借助第三方服务器作为跳板：
-      </p>
-      <div style="background:var(--bg-secondary);padding:20px;border-radius:var(--border-radius-sm);margin:20px 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
-        <div style="background:#e3f2fd;padding:12px;border-radius:8px;text-align:center;flex:1;min-width:120px"><div style="font-weight:600;color:#1976d2">Cloudflare Workers</div><div style="font-size:.9rem;color:var(--text-secondary)">发起请求</div></div>
-        <div style="color:var(--primary-color);font-size:1.5rem">→</div>
-        <div style="background:#f3e5f5;padding:12px;border-radius:8px;text-align:center;flex:1;min-width:120px"><div style="font-weight:600;color:#7b1fa2">ProxyIP 服务器</div><div style="font-size:.9rem;color:var(--text-secondary)">第三方代理</div></div>
-        <div style="color:var(--primary-color);font-size:1.5rem">→</div>
-        <div style="background:#e8f5e8;padding:12px;border-radius:8px;text-align:center;flex:1;min-width:120px"><div style="font-weight:600;color:#388e3c">Cloudflare 服务</div><div style="font-size:.9rem;color:var(--text-secondary)">目标服务</div></div>
+    <div class="doc-card">
+      <div class="doc-card-header">
+        <span class="doc-card-icon">🤔</span>
+        <h2>什么是 ProxyIP？</h2>
       </div>
-      <h3 style="color:var(--text-primary);margin:24px 0 16px">✅ 有效 ProxyIP 特征</h3>
-      <div style="background:linear-gradient(135deg,#d4edda,#c3e6cb);padding:20px;border-radius:var(--border-radius-sm);border-left:4px solid var(--success-color)">
-        <ul style="margin:0;color:#155724;line-height:1.8;padding-left:20px">
+      <p>在 Cloudflare Workers 环境中，ProxyIP 特指那些能够成功代理连接到 Cloudflare 服务的第三方 IP 地址。根据 <a href="https://developers.cloudflare.com/workers/runtime-apis/tcp-sockets/" target="_blank" style="color:var(--primary-light)">TCP Sockets 官方文档</a> 说明，Workers 无法直接连接到 Cloudflare 自有 IP 段，需借助第三方服务器作为跳板。</p>
+      
+      <div class="flow-diagram">
+        <div class="flow-item"><div class="title">Cloudflare Workers</div><div class="desc">发起请求</div></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-item"><div class="title">ProxyIP 服务器</div><div class="desc">第三方代理</div></div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-item"><div class="title">Cloudflare 服务</div><div class="desc">目标服务</div></div>
+      </div>
+
+      <h3>有效 ProxyIP 特征</h3>
+      <div class="feature-list">
+        <ul>
           <li><strong>网络连通性：</strong>能够成功建立到指定端口（通常为 443）的 TCP 连接</li>
           <li><strong>代理功能：</strong>具备反向代理 Cloudflare IP 段的 HTTPS 服务能力</li>
         </ul>
       </div>
-      <h3 style="color:var(--text-primary);margin:24px 0 16px">📝 支持的输入格式</h3>
+
+      <h3>支持的输入格式</h3>
       <div class="code-block">
 # IPv4 地址<br>
 1.2.3.4<br><br>
@@ -152,59 +196,52 @@ https://${hostname}/check?proxyip=1.2.3.4&amp;token=<span class="highlight">${pa
 1.2.3.4:443<br><br>
 # IPv6 地址<br>
 [2001:db8::1]<br><br>
-# IPv6 地址 + 端口<br>
-[2001:db8::1]:443<br><br>
 # 域名（自动解析）<br>
 example.com<br><br>
-# 域名 + 端口<br>
-example.com:443<br><br>
 # 特殊格式（.tp端口号）<br>
 example.com.tp443.com
       </div>
     </div>
 
-    <!-- API 文档 -->
-    <div class="api-docs" style="margin-top:50px">
-      <h2 class="section-title">📚 API 文档</h2>
-      <p style="margin-bottom:24px;color:var(--text-secondary);font-size:1.1rem">提供简单易用的 RESTful API 接口，支持 ProxyIP 检测、域名解析和 IP 信息查询</p>
-
-      <h3 style="color:var(--text-primary);margin:24px 0 16px">📍 检查 ProxyIP</h3>
-      <div class="code-block"><strong style="color:#68d391">GET</strong> /check?proxyip=<span class="highlight">YOUR_PROXY_IP</span></div>
-      <p style="color:var(--text-secondary);margin-top:8px;font-size:.95rem">支持格式：IPv4、IPv6、域名，可带端口号（默认 443）</p>
-
-      <h3 style="color:var(--text-primary);margin:24px 0 16px">💡 使用示例</h3>
+    <div class="doc-card">
+      <div class="doc-card-header">
+        <span class="doc-card-icon">📚</span>
+        <h2>API 文档</h2>
+      </div>
+      
+      <h3>检查 ProxyIP</h3>
+      <div class="code-block"><span class="method">GET</span> /check?proxyip=<span class="highlight">YOUR_PROXY_IP</span></div>
+      
+      <h3>使用示例</h3>
       <div class="code-block">curl "${curlExample}"</div>
-
-      <h3 style="color:var(--text-primary);margin:24px 0 16px">🔗 响应 JSON 格式</h3>
+      
+      <h3>响应格式</h3>
       <div class="code-block">
 {<br>
-&nbsp;&nbsp;"success": true,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// ProxyIP 是否有效<br>
-&nbsp;&nbsp;"proxyIP": "1.2.3.4",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 检测的 IP<br>
-&nbsp;&nbsp;"portRemote": 443,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 端口<br>
-&nbsp;&nbsp;"colo": "HKG",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// Cloudflare 机房代码<br>
-&nbsp;&nbsp;"responseTime": 166,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 响应时间(ms)<br>
+&nbsp;&nbsp;"success": true,<br>
+&nbsp;&nbsp;"proxyIP": "1.2.3.4",<br>
+&nbsp;&nbsp;"portRemote": 443,<br>
+&nbsp;&nbsp;"colo": "HKG",<br>
+&nbsp;&nbsp;"responseTime": 166,<br>
 &nbsp;&nbsp;"message": "第1次验证有效ProxyIP",<br>
 &nbsp;&nbsp;"timestamp": "2025-06-03T17:27:52.946Z"<br>
 }
       </div>
-      <p style="color:var(--text-secondary);margin-top:8px;font-size:.95rem">失败时：<code style="background:rgba(231,76,60,.1);padding:2px 6px;border-radius:4px">success: false</code>，<code style="background:rgba(231,76,60,.1);padding:2px 6px;border-radius:4px">proxyIP: -1</code>，<code style="background:rgba(231,76,60,.1);padding:2px 6px;border-radius:4px">responseTime: -1</code></p>
 
-      <h3 style="color:var(--text-primary);margin:24px 0 16px">📍 解析域名</h3>
-      <div class="code-block"><strong style="color:#68d391">GET</strong> /resolve?domain=<span class="highlight">example.com</span></div>
-      <p style="color:var(--text-secondary);margin-top:8px;font-size:.95rem">返回域名对应的所有 A 记录和 AAAA 记录</p>
+      <h3>解析域名</h3>
+      <div class="code-block"><span class="method">GET</span> /resolve?domain=<span class="highlight">example.com</span></div>
 
-      <h3 style="color:var(--text-primary);margin:24px 0 16px">📍 查询 IP 信息</h3>
-      <div class="code-block"><strong style="color:#68d391">GET</strong> /ip-info?ip=<span class="highlight">1.2.3.4</span></div>
-      <p style="color:var(--text-secondary);margin-top:8px;font-size:.95rem">数据来源：<a href="https://ipapi.is" target="_blank" style="color:var(--primary-color)">ipapi.is</a>，包含 ASN、地理位置、风险评分等详细信息</p>
+      <h3>查询 IP 信息</h3>
+      <div class="code-block"><span class="method">GET</span> /ip-info?ip=<span class="highlight">1.2.3.4</span></div>
+      <p style="margin-top:8px;font-size:.9rem">数据来源：<a href="https://ipapi.is" target="_blank" style="color:var(--primary-light)">ipapi.is</a></p>
 
       ${tokenSection}
     </div>
 
-    <div class="footer">
-      <p style="margin-top:8px;opacity:.8">© 2025 代理检测服务 - 基于 Cloudflare Workers 构建 | IP数据来源: ipapi.is</p>
-      ${footerToken}
-    </div>
-  </div>
+    <footer class="footer">
+      © 2025 Proxy Checker · 基于 Cloudflare Workers 构建 · IP数据来源: ipapi.is
+    </footer>
+  </main>
 
   <div id="toast" class="toast"></div>
 
@@ -247,11 +284,7 @@ example.com.tp443.com
       const input = document.getElementById('proxyip');
       input.focus();
       if (pathToken) showToast('✅ TOKEN验证通过，所有功能已启用', 5000);
-
-      // 保留路径，不应作为自动检测的 ProxyIP
       const reservedPaths = ['proxyip', 'proxy', 'check', 'resolve', 'ip-info', 'favicon.ico'];
-
-      // 自动检测：路径参数或 localStorage
       const urlParams = new URLSearchParams(window.location.search);
       let autoCheck = urlParams.get('autocheck');
       if (!autoCheck) {
@@ -292,7 +325,7 @@ example.com.tp443.com
     }
 
     function createCopyButton(text) {
-      return '<span class="copy-btn" data-copy="' + text + '">' + text + '</span>';
+      return '<button class="copy-btn" data-copy="' + text + '">' + text + '</button>';
     }
 
     async function checkProxyIP() {
@@ -302,34 +335,28 @@ example.com.tp443.com
       const btn = document.getElementById('checkBtn');
       const btnText = btn.querySelector('.btn-text');
       const spinner = btn.querySelector('.loading-spinner');
-
       let proxyip = (input.value || '').trim().split(' ')[0];
       if (proxyip !== input.value) { input.value = proxyip; showToast('已自动清理输入内容'); }
       if (!proxyip) { showToast('请输入代理IP地址'); input.focus(); return; }
-
-      // TOKEN 过期检测（仅无路径TOKEN时）
       if (!pathToken && calculateTimestamp() !== pageLoadTimestamp) {
         showToast('TOKEN已过期，正在刷新页面...');
         setTimeout(() => { window.location.href = window.location.protocol + '//' + window.location.host + '/' + encodeURIComponent(proxyip); }, 1000);
         return;
       }
-
       try { localStorage.setItem('lastProxyIP', proxyip); } catch(_) {}
-
       isChecking = true;
-      btn.disabled = true; btn.classList.add('btn-loading');
+      btn.disabled = true;
       btnText.style.display = 'none'; spinner.style.display = 'block';
       resultDiv.classList.remove('show');
-
       try {
         if (isIPAddress(proxyip)) await checkSingleIP(proxyip, resultDiv);
         else await checkDomain(proxyip, resultDiv);
       } catch(err) {
-        resultDiv.innerHTML = '<div class="result-card result-error"><h3>❌ 检测失败</h3><p><strong>错误信息:</strong> ' + err.message + '</p><p><strong>检测时间:</strong> ' + new Date().toLocaleString() + '</p></div>';
+        resultDiv.innerHTML = '<div class="result-card result-error"><h3>❌ 检测失败</h3><div class="result-row"><strong>错误信息:</strong> ' + err.message + '</div><div class="result-row"><strong>检测时间:</strong> ' + new Date().toLocaleString() + '</div></div>';
         resultDiv.classList.add('show');
       } finally {
         isChecking = false;
-        btn.disabled = false; btn.classList.remove('btn-loading');
+        btn.disabled = false;
         btnText.style.display = 'block'; spinner.style.display = 'none';
       }
     }
@@ -340,11 +367,11 @@ example.com.tp443.com
       const ipInfoHTML = formatIPInfo(ipInfo);
       if (data.success) {
         const rtHTML = data.responseTime > 0
-          ? '<div class="tooltip"><span style="background:var(--success-color);color:#fff;padding:4px 8px;border-radius:6px;font-weight:600;font-size:14px">' + data.responseTime + 'ms</span><span class="tooltiptext">该延迟并非 <strong>您当前网络</strong> 到 ProxyIP 的实际延迟，<br>而是 <strong>Cloudflare.' + (data.colo||'CF') + ' 机房</strong> 到 ProxyIP 的响应时间。</span></div>'
-          : '<span style="color:var(--text-light)">延迟未知</span>';
-        resultDiv.innerHTML = '<div class="result-card result-success"><h3>✅ ProxyIP 有效</h3><div style="margin-top:20px"><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap"><strong>🌐 ProxyIP 地址:</strong>' + createCopyButton(data.proxyIP) + ipInfoHTML + rtHTML + '</div><p><strong>🔌 端口:</strong> ' + createCopyButton(String(data.portRemote)) + '</p><p><strong>🏢 机房信息:</strong> ' + (data.colo||'CF') + '</p><p><strong>🕒 检测时间:</strong> ' + new Date(data.timestamp).toLocaleString() + '</p></div></div>';
+          ? '<div class="tooltip"><span class="status-badge success">' + data.responseTime + 'ms</span><span class="tooltiptext">该延迟是 Cloudflare.' + (data.colo||'CF') + ' 机房到 ProxyIP 的响应时间</span></div>'
+          : '<span style="color:var(--text-muted)">延迟未知</span>';
+        resultDiv.innerHTML = '<div class="result-card result-success"><h3>✅ ProxyIP 有效</h3><div class="result-row"><strong>ProxyIP:</strong>' + createCopyButton(data.proxyIP) + ipInfoHTML + rtHTML + '</div><div class="result-row"><strong>端口:</strong> ' + createCopyButton(String(data.portRemote)) + '</div><div class="result-row"><strong>机房:</strong> ' + (data.colo||'CF') + '</div><div class="result-row"><strong>时间:</strong> ' + new Date(data.timestamp).toLocaleString() + '</div></div>';
       } else {
-        resultDiv.innerHTML = '<div class="result-card result-error"><h3>❌ ProxyIP 失效</h3><div style="margin-top:20px"><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap"><strong>🌐 IP地址:</strong>' + createCopyButton(proxyip) + ipInfoHTML + '<span style="color:var(--error-color);font-weight:600;font-size:18px">❌</span></div><p><strong>🔌 端口:</strong> ' + (data.portRemote !== -1 ? createCopyButton(String(data.portRemote)) : '未知') + '</p><p><strong>🏢 机房信息:</strong> ' + (data.colo||'CF') + '</p>' + (data.message ? '<p><strong>错误信息:</strong> ' + data.message + '</p>' : '') + '<p><strong>🕒 检测时间:</strong> ' + new Date(data.timestamp).toLocaleString() + '</p></div></div>';
+        resultDiv.innerHTML = '<div class="result-card result-error"><h3>❌ ProxyIP 失效</h3><div class="result-row"><strong>IP地址:</strong>' + createCopyButton(proxyip) + ipInfoHTML + '</div><div class="result-row"><strong>端口:</strong> ' + (data.portRemote !== -1 ? createCopyButton(String(data.portRemote)) : '未知') + '</div><div class="result-row"><strong>机房:</strong> ' + (data.colo||'CF') + '</div>' + (data.message ? '<div class="result-row"><strong>错误:</strong> ' + data.message + '</div>' : '') + '<div class="result-row"><strong>时间:</strong> ' + new Date(data.timestamp).toLocaleString() + '</div></div>';
       }
       resultDiv.classList.add('show');
     }
@@ -354,21 +381,17 @@ example.com.tp443.com
       if (domain.includes('.tp')) { port = parseInt(domain.split('.tp')[1]) || 443; }
       else if (domain.includes('[') && domain.includes(']:')) { port = parseInt(domain.split(']:')[1]) || 443; cleanDomain = domain.split(']:')[0] + ']'; }
       else if (domain.includes(':')) { port = parseInt(domain.split(':')[1]) || 443; cleanDomain = domain.split(':')[0]; }
-
       const resolveData = await callAPI('./resolve', { domain: cleanDomain });
       if (!resolveData.success) throw new Error(resolveData.error || '域名解析失败');
       const ips = resolveData.ips;
       if (!ips || ips.length === 0) throw new Error('未找到域名对应的IP地址');
-
       ipCheckResults.clear();
-      resultDiv.innerHTML = '<div class="result-card result-warning"><h3>🔍 域名解析结果</h3><div style="margin-top:20px"><p><strong>🌐 ProxyIP 域名:</strong> ' + createCopyButton(cleanDomain) + '</p><p><strong>🔌 端口:</strong> ' + createCopyButton(String(port)) + '</p><p><strong>🏢 机房信息:</strong> <span id="domain-colo">检测中...</span></p><p><strong>📋 发现IP:</strong> ' + ips.length + ' 个</p><p><strong>🕒 解析时间:</strong> ' + new Date().toLocaleString() + '</p></div><div class="ip-grid" id="ip-grid">' + ips.map((ip, i) => '<div class="ip-item" id="ip-item-' + i + '"><div class="ip-status-line" id="ip-status-line-' + i + '"><strong>IP:</strong>' + createCopyButton(ip) + '<span id="ip-info-' + i + '" style="color:var(--text-secondary)">获取信息中...</span><span class="status-icon" id="status-icon-' + i + '">🔄</span></div></div>').join('') + '</div></div>';
+      resultDiv.innerHTML = '<div class="result-card result-warning"><h3>🔍 域名解析结果</h3><div class="result-row"><strong>域名:</strong> ' + createCopyButton(cleanDomain) + '</div><div class="result-row"><strong>端口:</strong> ' + createCopyButton(String(port)) + '</div><div class="result-row"><strong>机房:</strong> <span id="domain-colo">检测中...</span></div><div class="result-row"><strong>IP数量:</strong> ' + ips.length + ' 个</div><div class="result-row"><strong>时间:</strong> ' + new Date().toLocaleString() + '</div><div class="ip-grid" id="ip-grid">' + ips.map((ip, i) => '<div class="ip-item" id="ip-item-' + i + '"><div class="ip-status-line"><strong>IP:</strong>' + createCopyButton(ip) + '<span id="ip-info-' + i + '" style="color:var(--text-muted)">获取中...</span><span id="status-icon-' + i + '"></span></div></div>').join('') + '</div></div>';
       resultDiv.classList.add('show');
-
       await Promise.all([
         ...ips.map((ip, i) => checkIPWithIndex(ip, port, i)),
         ...ips.map((ip, i) => getIPInfoWithIndex(ip, i))
       ]);
-
       const validCount = Array.from(ipCheckResults.values()).filter(r => r.success).length;
       const card = resultDiv.querySelector('.result-card');
       const firstValid = Array.from(ipCheckResults.values()).find(r => r.success && r.colo);
@@ -387,20 +410,17 @@ example.com.tp443.com
         const item = document.getElementById('ip-item-' + i);
         const icon = document.getElementById('status-icon-' + i);
         if (result.success) {
-          item.style.background = 'linear-gradient(135deg,#d4edda,#c3e6cb)';
-          item.style.borderColor = 'var(--success-color)';
+          item.classList.add('valid');
           icon.innerHTML = result.responseTime > 0
-            ? '<div class="tooltip"><span style="background:var(--success-color);color:#fff;padding:2px 6px;border-radius:4px;font-size:12px;font-weight:600">' + result.responseTime + 'ms</span><span class="tooltiptext">Cloudflare.' + (result.colo||'CF') + ' 机房到 ProxyIP 的响应时间</span></div>'
-            : '<span style="color:var(--text-light);font-size:12px">延迟未知</span>';
-          icon.className = 'status-icon status-success';
+            ? '<div class="tooltip"><span class="status-badge success">' + result.responseTime + 'ms</span><span class="tooltiptext">Cloudflare.' + (result.colo||'CF') + ' 机房响应时间</span></div>'
+            : '<span class="status-badge success">有效</span>';
         } else {
-          item.style.background = 'linear-gradient(135deg,#f8d7da,#f5c6cb)';
-          item.style.borderColor = 'var(--error-color)';
-          icon.textContent = '❌'; icon.className = 'status-icon status-error'; icon.style.color = 'var(--error-color)';
+          item.classList.add('invalid');
+          icon.innerHTML = '<span class="status-badge error">失效</span>';
         }
       } catch(e) {
         const icon = document.getElementById('status-icon-' + i);
-        if (icon) { icon.textContent = '❌'; icon.style.color = 'var(--error-color)'; }
+        if (icon) icon.innerHTML = '<span class="status-badge error">错误</span>';
         ipCheckResults.set(ip + ':' + port, { success: false, colo: 'CF' });
       }
     }
@@ -412,7 +432,7 @@ example.com.tp443.com
         if (el) el.innerHTML = formatIPInfo(info);
       } catch(_) {
         const el = document.getElementById('ip-info-' + i);
-        if (el) el.innerHTML = '<span style="color:var(--text-light)">信息获取失败</span>';
+        if (el) el.innerHTML = '<span style="color:var(--text-muted)">获取失败</span>';
       }
     }
 
@@ -420,9 +440,8 @@ example.com.tp443.com
       try { return await callAPI('./ip-info', { ip: ip.replace(/[\\[\\]]/g, '') }); } catch(_) { return null; }
     }
 
-    // 格式化 IP 信息（适配 ipapi.is 响应字段）
     function formatIPInfo(info) {
-      if (!info || info.error) return '<span style="color:var(--text-light)">信息获取失败</span>';
+      if (!info || info.error) return '<span style="color:var(--text-muted)">获取失败</span>';
       const country = info.location?.country_code || info.country || '未知';
       const org = info.asn?.org || info.company?.name || (info.asn?.asn ? 'AS' + info.asn.asn : '') || '未知';
       return '<span class="tag tag-country">' + country + '</span><span class="tag tag-as">' + org + '</span>';
