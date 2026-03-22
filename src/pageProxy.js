@@ -44,8 +44,9 @@ https://${hostname}/check?proxy=socks5://...&amp;token=<span class="highlight">$
 <title>Check Socks5/HTTP - 代理检测服务</title>
 ${icoTag}
 <style>
+:root{--primary-color:#4caf50;--primary-dark:#2e7d32;--secondary-color:#81c784;--success-color:#2e7d32;--warning-color:#f39c12;--error-color:#e74c3c;--bg-primary:#ffffff;--bg-secondary:#f8f9fa;--bg-tertiary:#e9ecef;--text-primary:#2c3e50;--text-secondary:#6c757d;--text-light:#adb5bd;--border-color:#dee2e6;--shadow-sm:0 2px 4px rgba(0,0,0,.1);--shadow-md:0 4px 6px rgba(0,0,0,.1);--shadow-lg:0 10px 25px rgba(0,0,0,.15);--border-radius:12px;--border-radius-sm:8px;--transition:all .3s cubic-bezier(.4,0,.2,1)}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;${bgStyle}background-size:cover;background-position:center;background-attachment:fixed;background-repeat:no-repeat;min-height:100vh;padding:20px}
+body{font-family:'Segoe UI',system-ui,sans-serif;${bgStyle}background-size:cover;background-position:center;background-attachment:fixed;background-repeat:no-repeat;min-height:100vh;padding:20px}
 body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.1);backdrop-filter:blur(2px);z-index:0;pointer-events:none}
 .container{max-width:1200px;margin:0 auto;background:rgba(255,255,255,.15);backdrop-filter:blur(25px) saturate(180%);border-radius:20px;box-shadow:0 20px 40px rgba(0,0,0,.1),inset 0 1px 0 rgba(255,255,255,.4);overflow:hidden;border:1px solid rgba(255,255,255,.3);position:relative;z-index:1}
 .container>*{position:relative;z-index:2}
@@ -84,32 +85,27 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .error{text-align:center;padding:45px;color:rgba(211,47,47,.9);font-size:1.1em;background:rgba(244,67,54,.1);border-radius:8px;margin:10px;border:1px solid rgba(244,67,54,.2)}
 .waiting{text-align:center;padding:45px;color:#666;font-size:1.1em}
 .spinner{border:3px solid rgba(200,200,200,.4);border-top:3px solid rgba(100,100,100,.8);border-radius:50%;width:32px;height:32px;animation:spin 1s linear infinite;margin:0 auto 18px}
-
 .footer{text-align:center;padding:25px;color:#666;font-size:14px;border-top:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.2);backdrop-filter:blur(10px)}
-
-/* API文档区域 */
-.api-section{padding:35px;background:rgba(255,255,255,.1);backdrop-filter:blur(15px);border-top:1px solid rgba(255,255,255,.3)}
-.api-section h2{color:#1b5e20;font-size:1.5em;margin-bottom:20px;padding-bottom:10px;border-bottom:2px solid rgba(76,175,80,.4)}
-.api-tabs{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
-.api-tab{padding:8px 18px;background:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.5);border-radius:8px;cursor:pointer;font-weight:600;color:#2e7d32;transition:all .3s}
-.api-tab.active,.api-tab:hover{background:rgba(76,175,80,.3);border-color:rgba(76,175,80,.5)}
-.api-tab-content{display:none}
-.api-tab-content.active{display:block}
-.code-block{background:rgba(0,0,0,.7);color:#e2e8f0;padding:18px;border-radius:10px;font-family:'Monaco','Menlo',monospace;font-size:13px;overflow-x:auto;margin:12px 0;border:1px solid rgba(255,255,255,.1)}
+.api-docs{background:var(--bg-primary);border-radius:var(--border-radius);padding:32px;box-shadow:var(--shadow-lg);margin:20px;position:relative;overflow:hidden}
+.api-docs::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--primary-color),var(--secondary-color))}
+.api-docs:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.12)}
+.section-title{font-size:1.8rem;font-weight:700;color:var(--text-primary);margin-bottom:24px;position:relative;padding-bottom:12px}
+.section-title::after{content:"";position:absolute;bottom:0;left:0;width:60px;height:3px;background:linear-gradient(90deg,var(--primary-color),var(--secondary-color));border-radius:2px}
+.code-block{background:#2d3748;color:#e2e8f0;padding:20px;border-radius:var(--border-radius-sm);font-family:'Monaco','Menlo','Ubuntu Mono',monospace;font-size:14px;overflow-x:auto;margin:16px 0;border:1px solid #4a5568;position:relative}
+.code-block::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#4caf50,#81c784)}
 .highlight{color:#f56565;font-weight:600}
-.field-table{width:100%;border-collapse:collapse;margin:12px 0;background:rgba(255,255,255,.8);border-radius:8px;overflow:hidden}
-.field-table th{background:rgba(76,175,80,.3);color:#1b5e20;padding:10px 14px;text-align:left;font-weight:600}
-.field-table td{padding:10px 14px;border-bottom:1px solid rgba(200,200,200,.3);color:#333;font-size:.9em}
+.field-table{width:100%;border-collapse:collapse;margin:16px 0;background:var(--bg-primary);border-radius:var(--border-radius-sm);overflow:hidden;border:1px solid var(--border-color)}
+.field-table th{background:linear-gradient(135deg,rgba(76,175,80,.2),rgba(129,199,132,.2));color:#2e7d32;padding:12px 16px;text-align:left;font-weight:600}
+.field-table td{padding:12px 16px;border-bottom:1px solid var(--border-color);color:var(--text-primary);font-size:.95em}
 .field-table tr:last-child td{border-bottom:none}
 .field-table tr:hover td{background:rgba(76,175,80,.05)}
-
 @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
 @media(max-width:768px){
   .header{flex-direction:column;align-items:stretch;gap:20px;padding:25px}
   .header-input{max-width:none;flex-direction:column;gap:15px}
   .results-section{grid-template-columns:1fr;padding:20px}
   .container{margin:10px;border-radius:16px}
-  .api-section{padding:20px}
+  .api-docs{margin:10px;padding:20px}
 }
 </style>
 ${tokenScript}
@@ -138,18 +134,11 @@ ${tokenScript}
     </div>
   </div>
 
-  <!-- API 文档与使用说明 -->
-  <div class="api-section">
-    <h2>📚 API 文档 &amp; 使用说明</h2>
-    <div class="api-tabs">
-      <div class="api-tab active" onclick="showTab('tab-usage')">使用说明</div>
-      <div class="api-tab" onclick="showTab('tab-api')">API 接口</div>
-      <div class="api-tab" onclick="showTab('tab-fields')">字段说明</div>
-    </div>
-
-    <div id="tab-usage" class="api-tab-content active">
-      <h3 style="color:#1b5e20;margin-bottom:12px">支持的代理格式</h3>
-      <div class="code-block">
+  <!-- 使用说明 -->
+  <div class="api-docs">
+    <h2 class="section-title">📖 使用说明</h2>
+    <h3 style="color:#2e7d32;margin:24px 0 16px">支持的代理格式</h3>
+    <div class="code-block">
 # SOCKS5 代理（有认证）<br>
 socks5://username:password@host:port<br><br>
 # SOCKS5 代理（无认证）<br>
@@ -160,80 +149,93 @@ http://username:password@host:port<br><br>
 http://host:port<br><br>
 # IPv6 地址需要用方括号括起来<br>
 socks5://username:password@[2001:db8::1]:1080
-      </div>
-      <p style="color:#555;margin-top:12px;line-height:1.8">
-        💡 <strong>入口信息</strong>：代理服务器本身的 IP 地址信息（地理位置、ASN、风险评分等）<br>
-        💡 <strong>出口信息</strong>：通过代理后实际出口的 IP 地址信息
-      </p>
     </div>
+    <h3 style="color:#2e7d32;margin:24px 0 16px">💡 入口信息 vs 出口信息</h3>
+    <div style="background:linear-gradient(135deg,#e8f5e9,#c8e6c9);padding:20px;border-radius:var(--border-radius-sm);border-left:4px solid #2e7d32">
+      <ul style="margin:0;color:#1b5e20;line-height:1.8;padding-left:20px">
+        <li><strong>入口信息：</strong>代理服务器本身的 IP 地址信息（地理位置、ASN、风险评分等）</li>
+        <li><strong>出口信息：</strong>通过代理后实际出口的 IP 地址信息，代表你的真实网络身份</li>
+      </ul>
+    </div>
+    <h3 style="color:#2e7d32;margin:24px 0 16px">🔍 域名解析支持</h3>
+    <p style="margin-bottom:16px;line-height:1.8;color:var(--text-secondary)">
+      当代理地址使用域名时，系统会自动解析域名获取所有 IP 地址。如果解析出多个 IP，可以通过"更多IP"按钮切换检测不同的 IP 地址。
+    </p>
+  </div>
 
-    <div id="tab-api" class="api-tab-content">
-      <h3 style="color:#1b5e20;margin-bottom:12px">检测接口</h3>
-      <div class="code-block">
-<span style="color:#68d391">GET</span> /check?proxy=<span class="highlight">socks5://user:pass@host:port</span><br><br>
-# 也支持以下参数格式：<br>
-GET /check?socks5=<span class="highlight">user:pass@host:port</span><br>
-GET /check?http=<span class="highlight">user:pass@host:port</span>
-      </div>
+  <!-- API 文档 -->
+  <div class="api-docs" style="margin-top:50px">
+    <h2 class="section-title">📚 API 文档</h2>
+    <p style="margin-bottom:24px;color:var(--text-secondary);font-size:1.1rem">提供简单易用的 RESTful API 接口，支持 SOCKS5 和 HTTP 代理检测</p>
 
-      <h3 style="color:#1b5e20;margin:20px 0 12px">查询IP信息接口</h3>
-      <div class="code-block">
-<span style="color:#68d391">GET</span> /ip-info?ip=<span class="highlight">1.2.3.4</span>
-      </div>
+    <h3 style="color:#2e7d32;margin:24px 0 16px">📍 检测代理</h3>
+    <div class="code-block"><strong style="color:#68d391">GET</strong> /check?proxy=<span class="highlight">socks5://user:pass@host:port</span></div>
+    <p style="color:var(--text-secondary);margin-top:8px;font-size:.95rem">也支持简写格式：<code style="background:rgba(46,125,50,.1);padding:2px 6px;border-radius:4px">/check?socks5=user:pass@host:port</code> 或 <code style="background:rgba(46,125,50,.1);padding:2px 6px;border-radius:4px">/check?http=user:pass@host:port</code></p>
 
-      <h3 style="color:#1b5e20;margin:20px 0 12px">响应示例</h3>
-      <div class="code-block">
+    <h3 style="color:#2e7d32;margin:24px 0 16px">💡 使用示例</h3>
+    <div class="code-block">curl "https://${hostname}${pathToken ? '/' + pathToken : ''}/check?proxy=socks5://user:pass@1.2.3.4:1080"</div>
+
+    <h3 style="color:#2e7d32;margin:24px 0 16px">🔗 响应 JSON 格式</h3>
+    <div class="code-block">
 {<br>
 &nbsp;&nbsp;"success": true,<br>
-&nbsp;&nbsp;"proxy": "socks5://user:pass@host:port",<br>
+&nbsp;&nbsp;"proxy": "socks5://user:pass@1.2.3.4:1080",<br>
 &nbsp;&nbsp;"ip": "8.8.8.8",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 出口 IP<br>
 &nbsp;&nbsp;"loc": "US",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 位置代码<br>
-&nbsp;&nbsp;"responseTime": 1070,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 毫秒<br>
-&nbsp;&nbsp;"is_datacenter": true,<br>
-&nbsp;&nbsp;"is_vpn": true,<br>
-&nbsp;&nbsp;"asn": { "asn": 15169, "org": "Google LLC" },<br>
-&nbsp;&nbsp;"location": { "country": "United States", "city": "Mountain View" },<br>
+&nbsp;&nbsp;"responseTime": 1070,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 响应时间(ms)<br>
+&nbsp;&nbsp;"is_datacenter": true,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 是否为数据中心<br>
+&nbsp;&nbsp;"is_vpn": true,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 是否为 VPN<br>
+&nbsp;&nbsp;"is_proxy": false,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 是否为代理<br>
+&nbsp;&nbsp;"is_tor": false,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 是否为 Tor<br>
+&nbsp;&nbsp;"is_crawler": false,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 是否为爬虫<br>
+&nbsp;&nbsp;"is_abuser": false,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 是否有滥用记录<br>
+&nbsp;&nbsp;"is_bogon": false,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 是否为虚假IP<br>
+&nbsp;&nbsp;"asn": { "asn": 15169, "org": "Google LLC", "type": "hosting" },<br>
+&nbsp;&nbsp;"company": { "type": "hosting", "abuser_score": 0.01 },<br>
+&nbsp;&nbsp;"location": { "country_code": "US", "city": "Mountain View" },<br>
 &nbsp;&nbsp;"timestamp": "2025-06-03T17:21:25.045Z"<br>
 }
-      </div>
-
-      <h3 style="color:#1b5e20;margin:20px 0 12px">TOKEN 访问方式</h3>
-      <div class="code-block">
-# 路径TOKEN（推荐）<br>
-GET /YOUR_TOKEN/check?proxy=socks5://...<br><br>
-# 参数TOKEN<br>
-GET /check?proxy=socks5://...&amp;token=YOUR_TOKEN
-      </div>
-      ${tokenSection}
     </div>
 
-    <div id="tab-fields" class="api-tab-content">
-      <h3 style="color:#1b5e20;margin-bottom:12px">风险评估字段</h3>
-      <table class="field-table">
-        <thead><tr><th>字段</th><th>类型</th><th>说明</th></tr></thead>
-        <tbody>
-          <tr><td>is_datacenter</td><td>boolean</td><td>是否为数据中心 IP</td></tr>
-          <tr><td>is_proxy</td><td>boolean</td><td>是否为代理服务器</td></tr>
-          <tr><td>is_vpn</td><td>boolean</td><td>是否为 VPN 服务器</td></tr>
-          <tr><td>is_tor</td><td>boolean</td><td>是否为 Tor 出口节点</td></tr>
-          <tr><td>is_crawler</td><td>boolean</td><td>是否为网络爬虫</td></tr>
-          <tr><td>is_abuser</td><td>boolean</td><td>是否有滥用行为记录</td></tr>
-          <tr><td>is_bogon</td><td>boolean</td><td>是否为虚假/保留 IP</td></tr>
-        </tbody>
-      </table>
-      <h3 style="color:#1b5e20;margin:20px 0 12px">地理位置与 ASN 字段</h3>
-      <table class="field-table">
-        <thead><tr><th>字段路径</th><th>说明</th></tr></thead>
-        <tbody>
-          <tr><td>location.country_code</td><td>国家代码（ISO 3166-1）</td></tr>
-          <tr><td>location.city</td><td>城市名称</td></tr>
-          <tr><td>asn.asn</td><td>自治系统编号</td></tr>
-          <tr><td>asn.org</td><td>所属组织/ISP</td></tr>
-          <tr><td>company.type</td><td>IP 类型（isp/hosting/business）</td></tr>
-          <tr><td>company.abuser_score</td><td>滥用风险评分</td></tr>
-        </tbody>
-      </table>
-    </div>
+    <h3 style="color:#2e7d32;margin:24px 0 16px">📍 查询 IP 信息</h3>
+    <div class="code-block"><strong style="color:#68d391">GET</strong> /ip-info?ip=<span class="highlight">1.2.3.4</span></div>
+    <p style="color:var(--text-secondary);margin-top:8px;font-size:.95rem">数据来源：<a href="https://ipapi.is" target="_blank" style="color:#2e7d32">ipapi.is</a>，包含 ASN、地理位置、风险评分等详细信息</p>
+
+    <h3 style="color:#2e7d32;margin:24px 0 16px">📍 解析域名</h3>
+    <div class="code-block"><strong style="color:#68d391">GET</strong> /resolve?domain=<span class="highlight">example.com</span></div>
+
+    ${tokenSection}
+  </div>
+
+  <!-- 字段说明 -->
+  <div class="api-docs" style="margin-top:50px">
+    <h2 class="section-title">📋 字段说明</h2>
+    <h3 style="color:#2e7d32;margin:24px 0 16px">风险评估字段</h3>
+    <table class="field-table">
+      <thead><tr><th>字段</th><th>类型</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>is_datacenter</td><td>boolean</td><td>是否为数据中心 IP</td></tr>
+        <tr><td>is_proxy</td><td>boolean</td><td>是否为代理服务器</td></tr>
+        <tr><td>is_vpn</td><td>boolean</td><td>是否为 VPN 服务器</td></tr>
+        <tr><td>is_tor</td><td>boolean</td><td>是否为 Tor 出口节点</td></tr>
+        <tr><td>is_crawler</td><td>boolean</td><td>是否为网络爬虫</td></tr>
+        <tr><td>is_abuser</td><td>boolean</td><td>是否有滥用行为记录</td></tr>
+        <tr><td>is_bogon</td><td>boolean</td><td>是否为虚假/保留 IP</td></tr>
+      </tbody>
+    </table>
+    <h3 style="color:#2e7d32;margin:24px 0 16px">地理位置与 ASN 字段</h3>
+    <table class="field-table">
+      <thead><tr><th>字段路径</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>location.country_code</td><td>国家代码（ISO 3166-1）</td></tr>
+        <tr><td>location.city</td><td>城市名称</td></tr>
+        <tr><td>asn.asn</td><td>自治系统编号</td></tr>
+        <tr><td>asn.org</td><td>所属组织/ISP</td></tr>
+        <tr><td>asn.type</td><td>ASN 类型（isp/hosting/business）</td></tr>
+        <tr><td>company.type</td><td>IP 类型（isp/hosting/business）</td></tr>
+        <tr><td>company.abuser_score</td><td>滥用风险评分（0-1）</td></tr>
+      </tbody>
+    </table>
   </div>
 
   <div class="footer">© 2025 代理检测服务 - 基于 Cloudflare Workers 构建 | IP数据来源: ipapi.is</div>
@@ -243,13 +245,6 @@ GET /check?proxy=socks5://...&amp;token=YOUR_TOKEN
   let currentDomainInfo = null;
   let currentProxyTemplate = null;
   const pathToken = ${JSON.stringify(pathToken || '')};
-
-  function showTab(id) {
-    document.querySelectorAll('.api-tab-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.api-tab').forEach(el => el.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    event.target.classList.add('active');
-  }
 
   function preprocessProxyUrl(input) {
     let p = input.trim();

@@ -144,15 +144,33 @@ https://${hostname}/check?proxyip=1.2.3.4&amp;token=<span class="highlight">${pa
           <li><strong>代理功能：</strong>具备反向代理 Cloudflare IP 段的 HTTPS 服务能力</li>
         </ul>
       </div>
+      <h3 style="color:var(--text-primary);margin:24px 0 16px">📝 支持的输入格式</h3>
+      <div class="code-block">
+# IPv4 地址<br>
+1.2.3.4<br><br>
+# IPv4 地址 + 端口<br>
+1.2.3.4:443<br><br>
+# IPv6 地址<br>
+[2001:db8::1]<br><br>
+# IPv6 地址 + 端口<br>
+[2001:db8::1]:443<br><br>
+# 域名（自动解析）<br>
+example.com<br><br>
+# 域名 + 端口<br>
+example.com:443<br><br>
+# 特殊格式（.tp端口号）<br>
+example.com.tp443.com
+      </div>
     </div>
 
     <!-- API 文档 -->
     <div class="api-docs" style="margin-top:50px">
       <h2 class="section-title">📚 API 文档</h2>
-      <p style="margin-bottom:24px;color:var(--text-secondary);font-size:1.1rem">提供简单易用的 RESTful API 接口，支持批量检测和域名解析</p>
+      <p style="margin-bottom:24px;color:var(--text-secondary);font-size:1.1rem">提供简单易用的 RESTful API 接口，支持 ProxyIP 检测、域名解析和 IP 信息查询</p>
 
       <h3 style="color:var(--text-primary);margin:24px 0 16px">📍 检查 ProxyIP</h3>
       <div class="code-block"><strong style="color:#68d391">GET</strong> /check?proxyip=<span class="highlight">YOUR_PROXY_IP</span></div>
+      <p style="color:var(--text-secondary);margin-top:8px;font-size:.95rem">支持格式：IPv4、IPv6、域名，可带端口号（默认 443）</p>
 
       <h3 style="color:var(--text-primary);margin:24px 0 16px">💡 使用示例</h3>
       <div class="code-block">curl "${curlExample}"</div>
@@ -160,18 +178,20 @@ https://${hostname}/check?proxyip=1.2.3.4&amp;token=<span class="highlight">${pa
       <h3 style="color:var(--text-primary);margin:24px 0 16px">🔗 响应 JSON 格式</h3>
       <div class="code-block">
 {<br>
-&nbsp;&nbsp;"success": true|false,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// ProxyIP 是否有效<br>
-&nbsp;&nbsp;"proxyIP": "1.2.3.4",&nbsp;&nbsp;&nbsp;&nbsp;// 检测的 IP（失败时为 -1）<br>
-&nbsp;&nbsp;"portRemote": 443,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 端口（失败时为 -1）<br>
-&nbsp;&nbsp;"colo": "HKG",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// Cloudflare 机房代码<br>
-&nbsp;&nbsp;"responseTime": 166,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 响应时间 ms（失败时为 -1）<br>
+&nbsp;&nbsp;"success": true,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// ProxyIP 是否有效<br>
+&nbsp;&nbsp;"proxyIP": "1.2.3.4",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 检测的 IP<br>
+&nbsp;&nbsp;"portRemote": 443,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 端口<br>
+&nbsp;&nbsp;"colo": "HKG",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// Cloudflare 机房代码<br>
+&nbsp;&nbsp;"responseTime": 166,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 响应时间(ms)<br>
 &nbsp;&nbsp;"message": "第1次验证有效ProxyIP",<br>
 &nbsp;&nbsp;"timestamp": "2025-06-03T17:27:52.946Z"<br>
 }
       </div>
+      <p style="color:var(--text-secondary);margin-top:8px;font-size:.95rem">失败时：<code style="background:rgba(231,76,60,.1);padding:2px 6px;border-radius:4px">success: false</code>，<code style="background:rgba(231,76,60,.1);padding:2px 6px;border-radius:4px">proxyIP: -1</code>，<code style="background:rgba(231,76,60,.1);padding:2px 6px;border-radius:4px">responseTime: -1</code></p>
 
-      <h3 style="color:var(--text-primary);margin:24px 0 16px">📍 解析域名 IP</h3>
+      <h3 style="color:var(--text-primary);margin:24px 0 16px">📍 解析域名</h3>
       <div class="code-block"><strong style="color:#68d391">GET</strong> /resolve?domain=<span class="highlight">example.com</span></div>
+      <p style="color:var(--text-secondary);margin-top:8px;font-size:.95rem">返回域名对应的所有 A 记录和 AAAA 记录</p>
 
       <h3 style="color:var(--text-primary);margin:24px 0 16px">📍 查询 IP 信息</h3>
       <div class="code-block"><strong style="color:#68d391">GET</strong> /ip-info?ip=<span class="highlight">1.2.3.4</span></div>
