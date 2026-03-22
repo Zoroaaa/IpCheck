@@ -368,13 +368,13 @@ host:8080
     var hostPart = atIdx === -1 ? rawParam : rawParam.substring(atIdx + 1);
     
     if (hostPart.indexOf(']:') !== -1) {
-      port = parseInt(hostPart.split(']:')[1].replace(/\D/g, '')) || 443;
+      port = parseInt(hostPart.split(']:')[1].replace(/[^0-9]/g, '')) || 443;
     } else if (hostPart.charAt(0) === '[') {
       port = 443;
     } else {
       var parts = hostPart.split(':');
       if (parts.length >= 2) {
-        port = parseInt(parts[parts.length - 1].replace(/\D/g, '')) || 1080;
+        port = parseInt(parts[parts.length - 1].replace(/[^0-9]/g, '')) || 1080;
       }
     }
 
