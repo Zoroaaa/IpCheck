@@ -40,7 +40,7 @@ import { renderProxyPage } from './src/pageProxy.js';
 // ---------- 请求频率限制配置 ----------
 const RATE_LIMIT_DEFAULT = 60;           // 默认每分钟最大请求数
 const RATE_LIMIT_WINDOW = 60000;         // 时间窗口：60秒（毫秒）
-const rateLimitStore = new Map();        // 频率限制存储（内存缓存）
+const rateLimitStore = new Map();        // 频率限制存储（内存缓存，仅在单个 isolate 内有效；多 isolate 环境下限速为尽力而为）
 
 /**
  * 检查请求频率限制
@@ -51,7 +51,7 @@ const rateLimitStore = new Map();        // 频率限制存储（内存缓存）
 function checkRateLimit(clientIP, limit) {
   const now = Date.now();
   const windowStart = Math.floor(now / RATE_LIMIT_WINDOW) * RATE_LIMIT_WINDOW;
-  const key = `${clientIP}:${windowStart}`;
+  const key = `${clientIP}|${windowStart}`;
   
   const current = rateLimitStore.get(key) || 0;
   const remaining = Math.max(0, limit - current);
@@ -66,7 +66,7 @@ function checkRateLimit(clientIP, limit) {
   // 清理过期的记录（每 100 次请求清理一次）
   if (rateLimitStore.size > 1000) {
     for (const [k] of rateLimitStore) {
-      const keyTime = parseInt(k.split(':')[1]);
+      const keyTime = parseInt(k.split('|').pop());
       if (keyTime < windowStart - RATE_LIMIT_WINDOW) {
         rateLimitStore.delete(k);
       }

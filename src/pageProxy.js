@@ -18,21 +18,10 @@ export function renderProxyPage(hostname, ico, bgStyle, pathToken) {
   const tokenBadge = pathToken ? '<div class="token-badge">🔑 TOKEN验证通过</div>' : '';
   const curlExample = 'https://' + hostname + base + '/check?proxy=socks5://user:pass@1.2.3.4:1080';
 
-  let tokenScript = '';
-  if (pathToken) {
-    tokenScript = '<script>\n' +
-      '(function(){\n' +
-      '  var orig = window.fetch;\n' +
-      '  var tk = ' + safeToken + ';\n' +
-      '  window.fetch = function(url, opts){\n' +
-      '    if(typeof url === "string" && (url.indexOf("/check")!==-1 || url.indexOf("/ip-info")!==-1)){\n' +
-      '      url += (url.indexOf("?")!==-1 ? "&" : "?") + "token=" + encodeURIComponent(tk);\n' +
-      '    }\n' +
-      '    return orig.call(this, url, opts);\n' +
-      '  };\n' +
-      '})();\n' +
-      '<\/script>';
-  }
+  // Token is passed via a data attribute on <html> to avoid injection into template literals
+  const tokenMeta = pathToken
+    ? '<meta name="x-path-token" content="' + escapeHtml(pathToken) + '">'
+    : '';
 
   let tokenSection = '';
   if (pathToken) {
@@ -167,7 +156,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
 @media(max-width:900px){.results-grid{grid-template-columns:1fr}}
 @media(max-width:768px){.nav{padding:12px 16px}.nav-links{display:none}.main{padding:40px 16px 60px}.input-card,.doc-card{padding:20px}.input-group{flex-direction:column}.btn{width:100%}.hero h1{font-size:1.5rem}}
 </style>
-${tokenScript}
+${tokenMeta}
 </head>
 <body>
 ${tokenBadge}
@@ -322,9 +311,10 @@ host:8080
 
 <script>
 (function() {
+  function esc(s){ var d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML; }
   var currentDomainInfo = null;
   var currentProxyTemplate = null;
-  var pathToken = ${safeToken};
+  var pathToken = (document.querySelector('meta[name="x-path-token"]') || {}).content || '';
   var currentMode = 'single';
 
   function switchMode(mode) {
@@ -656,8 +646,8 @@ host:8080
           targetProxy = replaceHostInProxy(proxyUrl, targetIP);
           currentProxyTemplate = proxyUrl;
         } catch(e) {
-          entry.innerHTML = "<div class='error'>域名解析失败: " + e.message + "</div>";
-          exit.innerHTML = "<div class='error'>域名解析失败: " + e.message + "</div>";
+          entry.innerHTML = "<div class='error'>域名解析失败: " + esc(e.message) + "</div>";
+          exit.innerHTML = "<div class='error'>域名解析失败: " + esc(e.message) + "</div>";
           return;
         }
       }
@@ -677,7 +667,7 @@ host:8080
       if (xp.status === "fulfilled") {
         if (!xp.value.success) {
           document.getElementById("exitInfoTitle").innerHTML = "📤 出口信息 <span class='response-time'>(代理不可用)</span>";
-          exit.innerHTML = "<div class='error'>代理检测失败: " + (xp.value.error || "请检查代理链接") + "</div>";
+          exit.innerHTML = "<div class='error'>代理检测失败: " + esc(xp.value.error || "请检查代理链接") + "</div>";
         } else formatInfoDisplay(xp.value, "exitInfo", false, xp.value.responseTime);
       } else {
         document.getElementById("exitInfoTitle").innerHTML = "📤 出口信息 <span class='response-time'>(代理不可用)</span>";
@@ -748,7 +738,7 @@ host:8080
       
       renderBatchResults(data, resultsContent);
     } catch (e) {
-      resultsContent.innerHTML = '<div class="error">批量检测失败: ' + e.message + '</div>';
+      resultsContent.innerHTML = '<div class="error">批量检测失败: ' + esc(e.message) + '</div>';
     } finally {
       btn.disabled = false;
       btnText.style.display = 'block';

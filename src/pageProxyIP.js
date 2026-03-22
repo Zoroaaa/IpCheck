@@ -2,6 +2,11 @@
 //  pageProxyIP.js — ProxyIP 检测前端页面（浅色现代主题）
 // ============================================================
 
+function escapeHtmlIP(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
 export function renderProxyIPPage(hostname, ico, pathToken) {
   const base = pathToken ? `/${pathToken}` : '';
   const tokenBadge = pathToken ? '<div class="token-badge">🔑 TOKEN验证通过</div>' : '';
@@ -23,6 +28,9 @@ export function renderProxyIPPage(hostname, ico, pathToken) {
         </div>
       </div>
     </div>` : '';
+  const tokenMeta = pathToken
+    ? '<meta name="x-path-token" content="' + escapeHtmlIP(pathToken) + '">'
+    : '';
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -298,11 +306,12 @@ example.com.tp443.com
   <div id="toast" class="toast"></div>
 
   <script>
+    function esc(s){ var d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML; }
     let isChecking = false;
     let currentMode = 'single';
     const ipCheckResults = new Map();
     let pageLoadTimestamp;
-    const pathToken = ${JSON.stringify(pathToken || '')};
+    const pathToken = (document.querySelector('meta[name="x-path-token"]') || {}).content || '';
 
     function switchMode(mode) {
       currentMode = mode;
@@ -416,7 +425,7 @@ example.com.tp443.com
         if (isIPAddress(proxyip)) await checkSingleIP(proxyip, resultDiv);
         else await checkDomain(proxyip, resultDiv);
       } catch(err) {
-        resultDiv.innerHTML = '<div class="result-card result-error"><h3>❌ 检测失败</h3><div class="result-row"><strong>错误信息:</strong> ' + err.message + '</div><div class="result-row"><strong>检测时间:</strong> ' + new Date().toLocaleString() + '</div></div>';
+        resultDiv.innerHTML = '<div class="result-card result-error"><h3>❌ 检测失败</h3><div class="result-row"><strong>错误信息:</strong> ' + esc(err.message) + '</div><div class="result-row"><strong>检测时间:</strong> ' + new Date().toLocaleString() + '</div></div>';
         resultDiv.classList.add('show');
       } finally {
         isChecking = false;
@@ -435,7 +444,7 @@ example.com.tp443.com
           : '<span style="color:var(--text-muted)">延迟未知</span>';
         resultDiv.innerHTML = '<div class="result-card result-success"><h3>✅ ProxyIP 有效</h3><div class="result-row"><strong>ProxyIP:</strong>' + createCopyButton(data.proxyIP) + ipInfoHTML + rtHTML + '</div><div class="result-row"><strong>端口:</strong> ' + createCopyButton(String(data.portRemote)) + '</div><div class="result-row"><strong>机房:</strong> ' + (data.colo||'CF') + '</div><div class="result-row"><strong>时间:</strong> ' + new Date(data.timestamp).toLocaleString() + '</div></div>';
       } else {
-        resultDiv.innerHTML = '<div class="result-card result-error"><h3>❌ ProxyIP 失效</h3><div class="result-row"><strong>IP地址:</strong>' + createCopyButton(proxyip) + ipInfoHTML + '</div><div class="result-row"><strong>端口:</strong> ' + (data.portRemote !== -1 ? createCopyButton(String(data.portRemote)) : '未知') + '</div><div class="result-row"><strong>机房:</strong> ' + (data.colo||'CF') + '</div>' + (data.message ? '<div class="result-row"><strong>错误:</strong> ' + data.message + '</div>' : '') + '<div class="result-row"><strong>时间:</strong> ' + new Date(data.timestamp).toLocaleString() + '</div></div>';
+        resultDiv.innerHTML = '<div class="result-card result-error"><h3>❌ ProxyIP 失效</h3><div class="result-row"><strong>IP地址:</strong>' + createCopyButton(proxyip) + ipInfoHTML + '</div><div class="result-row"><strong>端口:</strong> ' + (data.portRemote !== -1 ? createCopyButton(String(data.portRemote)) : '未知') + '</div><div class="result-row"><strong>机房:</strong> ' + (data.colo||'CF') + '</div>' + (data.message ? '<div class="result-row"><strong>错误:</strong> ' + esc(data.message) + '</div>' : '') + '<div class="result-row"><strong>时间:</strong> ' + new Date(data.timestamp).toLocaleString() + '</div></div>';
       }
       resultDiv.classList.add('show');
     }
@@ -562,7 +571,7 @@ example.com.tp443.com
         
         renderBatchResults(data, resultDiv);
       } catch (err) {
-        resultDiv.innerHTML = '<div class="result-card result-error"><h3>❌ 批量检测失败</h3><div class="result-row"><strong>错误信息:</strong> ' + err.message + '</div></div>';
+        resultDiv.innerHTML = '<div class="result-card result-error"><h3>❌ 批量检测失败</h3><div class="result-row"><strong>错误信息:</strong> ' + esc(err.message) + '</div></div>';
         resultDiv.classList.add('show');
       } finally {
         isChecking = false;
