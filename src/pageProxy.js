@@ -704,7 +704,7 @@ host:8080
       return;
     }
     
-    var items = rawInput.split("\n")
+    var items = rawInput.split("\\n")
       .map(function(line) { return line.trim(); })
       .filter(function(line) { return line && line.charAt(0) !== '#'; });
     

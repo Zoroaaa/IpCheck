@@ -535,7 +535,7 @@ example.com.tp443.com
         return;
       }
       
-      const items = rawInput.split('\n')
+      const items = rawInput.split('\\n')
         .map(line => line.trim())
         .filter(line => line && !line.startsWith('#'));
       
