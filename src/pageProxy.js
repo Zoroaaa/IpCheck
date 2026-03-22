@@ -2,41 +2,60 @@
 //  pageProxy.js — SOCKS5 / HTTP 代理检测前端页面
 // ============================================================
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+function escapeJs(str) {
+  if (!str) return '""';
+  return JSON.stringify(String(str));
+}
+
 export function renderProxyPage(hostname, ico, bgStyle, pathToken) {
-  const icoTag = ico ? '<link rel="icon" href="' + ico + '" type="image/x-icon">' : '';
-  const safeToken = JSON.stringify(pathToken || '');
+  const safeToken = escapeJs(pathToken || '');
   const tokenBadge = pathToken ? '<div class="token-badge">🔑 TOKEN验证通过</div>' : '';
   const secureSubtitle = pathToken ? '<p style="font-size:.9em;opacity:.8;margin-top:5px">🔒 安全模式 - 路径TOKEN验证已启用</p>' : '';
   const footerToken = pathToken ? '<p style="margin-top:4px;opacity:.6">🔒 当前会话已通过TOKEN验证</p>' : '';
-  const tokenScript = pathToken ? '<script>\n' +
-    '(function(){\n' +
-    '  var orig = window.fetch;\n' +
-    '  var tk = ' + safeToken + ';\n' +
-    '  window.fetch = function(url, opts){\n' +
-    '    if(typeof url === "string" && (url.indexOf("/check")!==-1 || url.indexOf("/ip-info")!==-1)){\n' +
-    '      url += (url.indexOf("?")!==-1 ? "&" : "?") + "token=" + encodeURIComponent(tk);\n' +
-    '    }\n' +
-    '    return orig.call(this, url, opts);\n' +
-    '  };\n' +
-    '  document.addEventListener("DOMContentLoaded", function(){\n' +
-    '    var h1 = document.querySelector("h1");\n' +
-    '    if(h1) h1.textContent = "代理检测工具 (授权访问)";\n' +
-    '  });\n' +
-    '})();\n' +
-    '<\/script>' : '';
-  const tokenSection = pathToken ? '\n' +
-    '    <h3 style="color:#1b5e20;margin:24px 0 12px">🔐 TOKEN访问方式</h3>\n' +
-    '    <div style="background:linear-gradient(135deg,#e3f2fd,#bbdefb);padding:20px;border-radius:10px;border-left:4px solid #2e7d32">\n' +
-    '      <p style="margin-bottom:12px;color:#1565c0;font-weight:600">路径TOKEN访问（推荐）:</p>\n' +
-    '      <div class="code-block" style="background:#1e3a8a;color:#e0f2fe">\n' +
-    'https://' + hostname + '/<span class="highlight">' + escapeHtml(pathToken) + '</span><br>\n' +
-    'https://' + hostname + '/<span class="highlight">' + escapeHtml(pathToken) + '</span>/check?proxy=socks5://...\n' +
-    '      </div>\n' +
-    '      <p style="margin:16px 0 12px;color:#1565c0;font-weight:600">参数TOKEN访问:</p>\n' +
-    '      <div class="code-block" style="background:#1e3a8a;color:#e0f2fe">\n' +
-    'https://' + hostname + '/check?proxy=socks5://...&amp;token=<span class="highlight">' + escapeHtml(pathToken) + '</span>\n' +
-    '      </div>\n' +
-    '    </div>' : '';
+
+  let tokenScript = '';
+  if (pathToken) {
+    tokenScript = '<script>\n' +
+      '(function(){\n' +
+      '  var orig = window.fetch;\n' +
+      '  var tk = ' + safeToken + ';\n' +
+      '  window.fetch = function(url, opts){\n' +
+      '    if(typeof url === "string" && (url.indexOf("/check")!==-1 || url.indexOf("/ip-info")!==-1)){\n' +
+      '      url += (url.indexOf("?")!==-1 ? "&" : "?") + "token=" + encodeURIComponent(tk);\n' +
+      '    }\n' +
+      '    return orig.call(this, url, opts);\n' +
+      '  };\n' +
+      '  document.addEventListener("DOMContentLoaded", function(){\n' +
+      '    var h1 = document.querySelector("h1");\n' +
+      '    if(h1) h1.textContent = "代理检测工具 (授权访问)";\n' +
+      '  });\n' +
+      '})();\n' +
+      '<\/script>';
+  }
+
+  let tokenSection = '';
+  if (pathToken) {
+    tokenSection = '\n' +
+      '    <h3 style="color:#1b5e20;margin:24px 0 12px">🔐 TOKEN访问方式</h3>\n' +
+      '    <div style="background:linear-gradient(135deg,#e3f2fd,#bbdefb);padding:20px;border-radius:10px;border-left:4px solid #2e7d32">\n' +
+      '      <p style="margin-bottom:12px;color:#1565c0;font-weight:600">路径TOKEN访问（推荐）:</p>\n' +
+      '      <div class="code-block" style="background:#1e3a8a;color:#e0f2fe">\n' +
+      'https://' + hostname + '/<span class="highlight">' + escapeHtml(pathToken) + '</span><br>\n' +
+      'https://' + hostname + '/<span class="highlight">' + escapeHtml(pathToken) + '</span>/check?proxy=socks5://...\n' +
+      '      </div>\n' +
+      '      <p style="margin:16px 0 12px;color:#1565c0;font-weight:600">参数TOKEN访问:</p>\n' +
+      '      <div class="code-block" style="background:#1e3a8a;color:#e0f2fe">\n' +
+      'https://' + hostname + '/check?proxy=socks5://...&amp;token=<span class="highlight">' + escapeHtml(pathToken) + '</span>\n' +
+      '      </div>\n' +
+      '    </div>';
+  }
+
+  const curlExample = 'https://' + hostname + (pathToken ? '/' + escapeHtml(pathToken) : '') + '/check?proxy=socks5://user:pass@1.2.3.4:1080';
 
   return '<!DOCTYPE html>\n' +
 '<html lang="zh-CN">\n' +
@@ -44,7 +63,7 @@ export function renderProxyPage(hostname, ico, bgStyle, pathToken) {
 '<meta charset="UTF-8">\n' +
 '<meta name="viewport" content="width=device-width,initial-scale=1.0">\n' +
 '<title>Check Socks5/HTTP - 代理检测服务</title>\n' +
-icoTag + '\n' +
+(ico ? '<link rel="icon" href="' + ico + '" type="image/x-icon">\n' : '') +
 '<style>\n' +
 ':root{--primary-color:#4caf50;--primary-dark:#2e7d32;--secondary-color:#81c784;--success-color:#2e7d32;--warning-color:#f39c12;--error-color:#e74c3c;--bg-primary:#ffffff;--bg-secondary:#f8f9fa;--bg-tertiary:#e9ecef;--text-primary:#2c3e50;--text-secondary:#6c757d;--text-light:#adb5bd;--border-color:#dee2e6;--shadow-sm:0 2px 4px rgba(0,0,0,.1);--shadow-md:0 4px 6px rgba(0,0,0,.1);--shadow-lg:0 10px 25px rgba(0,0,0,.15);--border-radius:12px;--border-radius-sm:8px;--transition:all .3s cubic-bezier(.4,0,.2,1)}\n' +
 '*{margin:0;padding:0;box-sizing:border-box}\n' +
@@ -125,7 +144,7 @@ tokenBadge + '\n' +
 '      ' + secureSubtitle + '\n' +
 '    </div>\n' +
 '    <div class="header-input">\n' +
-'      <input type="text" id="proxyInput" placeholder="输入代理链接，例如：socks5://username:password@host:port" />\n' +
+'      <input type="text" id="proxyInput" placeholder="输入代理链接，例如：socks5://username:password@host:port">\n' +
 '      <button id="checkBtn">检查代理</button>\n' +
 '    </div>\n' +
 '  </div>\n' +
@@ -178,7 +197,7 @@ tokenBadge + '\n' +
 '    <p style="color:var(--text-secondary);margin-top:8px;font-size:.95rem">也支持简写格式：<code style="background:rgba(46,125,50,.1);padding:2px 6px;border-radius:4px">/check?socks5=user:pass@host:port</code> 或 <code style="background:rgba(46,125,50,.1);padding:2px 6px;border-radius:4px">/check?http=user:pass@host:port</code></p>\n' +
 '\n' +
 '    <h3 style="color:#2e7d32;margin:24px 0 16px">💡 使用示例</h3>\n' +
-'    <div class="code-block">curl "https://' + hostname + (pathToken ? '/' + escapeHtml(pathToken) : '') + '/check?proxy=socks5://user:pass@1.2.3.4:1080"</div>\n' +
+'    <div class="code-block">curl "' + curlExample + '"</div>\n' +
 '\n' +
 '    <h3 style="color:#2e7d32;margin:24px 0 16px">🔗 响应 JSON 格式</h3>\n' +
 '    <div class="code-block">\n' +
@@ -250,6 +269,7 @@ tokenBadge + '\n' +
 '  <div id="toast" class="toast"></div>\n' +
 '\n' +
 '<script>\n' +
+'(function() {\n' +
 '  var currentDomainInfo = null;\n' +
 '  var currentProxyTemplate = null;\n' +
 '  var pathToken = ' + safeToken + ';\n' +
@@ -326,7 +346,8 @@ tokenBadge + '\n' +
 '  }\n' +
 '\n' +
 '  async function fetchDNSRecords(domain, type) {\n' +
-'    var r = await fetch("https://cloudflare-dns.com/dns-query?" + new URLSearchParams({ name: domain, type: type }), { headers: { Accept: "application/dns-json" } });\n' +
+'    var url = "https://cloudflare-dns.com/dns-query?name=" + encodeURIComponent(domain) + "&type=" + encodeURIComponent(type);\n' +
+'    var r = await fetch(url, { headers: { Accept: "application/dns-json" } });\n' +
 '    var d = await r.json();\n' +
 '    return d.Answer || [];\n' +
 '  }\n' +
@@ -343,7 +364,7 @@ tokenBadge + '\n' +
 '    if (!type) return "<span>未知</span>";\n' +
 '    var m = { isp: { t: "住宅", s: "color:#36893dcc;font-weight:bold" }, hosting: { t: "机房", s: "font-weight:bold" }, business: { t: "商用", s: "color:#eab308;font-weight:bold" } };\n' +
 '    var x = m[type.toLowerCase()];\n' +
-'    return x ? "<span style=\"" + x.s + "\">" + x.t + "</span>" : "<span style=\"font-weight:bold\">" + type + "</span>";\n' +
+'    return x ? "<span style=\\"" + x.s + "\\">" + x.t + "</span>" : "<span style=\\"font-weight:bold\\">" + type + "</span>";\n' +
 '  }\n' +
 '\n' +
 '  function calculateAbuseScore(cScore, aScore, flags) {\n' +
@@ -374,7 +395,7 @@ tokenBadge + '\n' +
 '        else title.textContent = "出口信息";\n' +
 '      }\n' +
 '    }\n' +
-'    if (!data || data.error) { container.innerHTML = "<div class=\"error\">数据获取失败，请稍后重试</div>"; return; }\n' +
+'    if (!data || data.error) { container.innerHTML = "<div class=\\"error\\">数据获取失败，请稍后重试</div>"; return; }\n' +
 '\n' +
 '    var cScore = data.company ? data.company.abuser_score : null;\n' +
 '    var aScore = data.asn ? data.asn.abuser_score : null;\n' +
@@ -384,26 +405,26 @@ tokenBadge + '\n' +
 '    if (combined !== null) {\n' +
 '      var pct = combined * 100;\n' +
 '      var lv = pct >= 100 ? "极度危险" : pct >= 20 ? "高风险" : pct >= 5 ? "轻微风险" : pct >= 0.25 ? "纯净" : "极度纯净";\n' +
-'      abuseHTML = "<span style=\"background:" + getRiskLevelColor(lv) + ";color:#fff;padding:4px 8px;border-radius:5px;font-size:.9em;font-weight:bold\">" + formatAbuseScorePercentage(combined) + " " + lv + "</span>";\n' +
+'      abuseHTML = "<span style=\\"background:" + getRiskLevelColor(lv) + ";color:#fff;padding:4px 8px;border-radius:5px;font-size:.9em;font-weight:bold\\">" + formatAbuseScorePercentage(combined) + " " + lv + "</span>";\n' +
 '    }\n' +
 '\n' +
 '    var ipVal = data.ip || "N/A";\n' +
 '    var ipDisplay = ipVal;\n' +
 '    if (showIPSelector && currentDomainInfo && currentDomainInfo.all_ips && currentDomainInfo.all_ips.length > 1) {\n' +
 '      var ipOptions = currentDomainInfo.all_ips.map(function(ip) {\n' +
-'        return "<div class=\"ip-option" + (ip === ipVal ? " active" : "") + "\" data-ip=\"" + ip + "\">" + ip + "</div>";\n' +
+'        return "<div class=\\"ip-option" + (ip === ipVal ? " active" : "") + "\\" data-ip=\\"" + ip + "\\">" + ip + "</div>";\n' +
 '      }).join("");\n' +
-'      ipDisplay = "<div class=\"ip-selector\"><button class=\"more-ip-btn\" id=\"moreIpBtn\">更多IP</button><span class=\"ip-text\">" + ipVal + "</span><div class=\"ip-dropdown\" id=\"ipDropdown\">" + ipOptions + "</div></div>";\n' +
+'      ipDisplay = "<div class=\\"ip-selector\\"><button class=\\"more-ip-btn\\" id=\\"moreIpBtn\\">更多IP</button><span class=\\"ip-text\\">" + ipVal + "</span><div class=\\"ip-dropdown\\" id=\\"ipDropdown\\">" + ipOptions + "</div></div>";\n' +
 '    }\n' +
 '\n' +
 '    function bool(v) {\n' +
-'      return "<span class=\"" + (v ? "status-yes" : "status-no") + "\">" + (v ? "是" : "否") + "</span>";\n' +
+'      return "<span class=\\"" + (v ? "status-yes" : "status-no") + "\\">" + (v ? "是" : "否") + "</span>";\n' +
 '    }\n' +
 '    function row(label, val) {\n' +
-'      return "<div class=\"info-item\"><span class=\"info-label\">" + label + ":</span><span class=\"info-value\">" + val + "</span></div>";\n' +
+'      return "<div class=\\"info-item\\"><span class=\\"info-label\\">" + label + ":</span><span class=\\"info-value\\">" + val + "</span></div>";\n' +
 '    }\n' +
 '    container.innerHTML =\n' +
-'      row("IP地址", "<div class=\"ip-value-container\">" + ipDisplay + "</div>") +\n' +
+'      row("IP地址", "<div class=\\"ip-value-container\\">" + ipDisplay + "</div>") +\n' +
 '      row("运营商/ASN类型", formatIpType(data.company ? data.company.type : null) + " / " + formatIpType(data.asn ? data.asn.type : null)) +\n' +
 '      row("综合滥用评分", abuseHTML) +\n' +
 '      row("网络爬虫", bool(data.is_crawler)) +\n' +
@@ -419,20 +440,20 @@ tokenBadge + '\n' +
 '\n' +
 '    var moreIpBtn = document.getElementById("moreIpBtn");\n' +
 '    if (moreIpBtn) {\n' +
-'      moreIpBtn.addEventListener("click", function(e) {\n' +
+'      moreIpBtn.onclick = function(e) {\n' +
 '        e.stopPropagation();\n' +
 '        var dd = document.getElementById("ipDropdown");\n' +
 '        dd.classList.toggle("show");\n' +
-'      });\n' +
+'      };\n' +
 '    }\n' +
 '    var ipOptionsEls = document.querySelectorAll(".ip-option");\n' +
-'    ipOptionsEls.forEach(function(el) {\n' +
-'      el.addEventListener("click", function(e) {\n' +
+'    for (var i = 0; i < ipOptionsEls.length; i++) {\n' +
+'      ipOptionsEls[i].onclick = function(e) {\n' +
 '        e.stopPropagation();\n' +
-'        var selectedIP = el.getAttribute("data-ip");\n' +
+'        var selectedIP = this.getAttribute("data-ip");\n' +
 '        selectIP(selectedIP);\n' +
-'      });\n' +
-'    });\n' +
+'      };\n' +
+'    }\n' +
 '    document.addEventListener("click", function closeDropdown(e) {\n' +
 '      var dd = document.getElementById("ipDropdown");\n' +
 '      if (dd && !e.target.closest(".ip-value-container")) {\n' +
@@ -468,23 +489,23 @@ tokenBadge + '\n' +
 '    var entry = document.getElementById("entryInfo");\n' +
 '    var exit = document.getElementById("exitInfo");\n' +
 '    btn.disabled = true;\n' +
-'    entry.innerHTML = "<div class=\"loading\"><div class=\"spinner\"></div>正在获取入口信息...</div>";\n' +
-'    exit.innerHTML = "<div class=\"loading\"><div class=\"spinner\"></div>正在获取出口信息...</div>";\n' +
+'    entry.innerHTML = "<div class=\\"loading\\"><div class=\\"spinner\\"></div>正在获取入口信息...</div>";\n' +
+'    exit.innerHTML = "<div class=\\"loading\\"><div class=\\"spinner\\"></div>正在获取出口信息...</div>";\n' +
 '    try {\n' +
 '      var entryIP = selectedIP.charAt(0) === "[" && selectedIP.charAt(selectedIP.length - 1) === "]" ? selectedIP.slice(1, -1) : selectedIP;\n' +
 '      var entryData = await fetchEntryInfo(entryIP);\n' +
-'      if (entryData.error) entry.innerHTML = "<div class=\"error\">入口信息获取失败</div>";\n' +
+'      if (entryData.error) entry.innerHTML = "<div class=\\"error\\">入口信息获取失败</div>";\n' +
 '      else formatInfoDisplay(entryData, "entryInfo", true);\n' +
 '      var newProxy = replaceHostInProxy(currentProxyTemplate, selectedIP);\n' +
 '      var pr = await fetch("/check?proxy=" + encodeURIComponent(newProxy));\n' +
 '      var pd = await pr.json();\n' +
 '      if (!pd.success) {\n' +
 '        document.getElementById("exitInfoTitle").textContent = "出口信息(代理不可用)";\n' +
-'        exit.innerHTML = "<div class=\"error\">代理检测失败</div>";\n' +
+'        exit.innerHTML = "<div class=\\"error\\">代理检测失败</div>";\n' +
 '      } else formatInfoDisplay(pd, "exitInfo", false, pd.responseTime);\n' +
 '    } catch(e) {\n' +
-'      entry.innerHTML = "<div class=\"error\">切换失败</div>";\n' +
-'      exit.innerHTML = "<div class=\"error\">切换失败</div>";\n' +
+'      entry.innerHTML = "<div class=\\"error\\">切换失败</div>";\n' +
+'      exit.innerHTML = "<div class=\\"error\\">切换失败</div>";\n' +
 '    } finally {\n' +
 '      btn.disabled = false;\n' +
 '    }\n' +
@@ -502,28 +523,28 @@ tokenBadge + '\n' +
 '    currentProxyTemplate = proxyUrl;\n' +
 '    btn.disabled = true;\n' +
 '    document.getElementById("exitInfoTitle").textContent = "出口信息";\n' +
-'    entry.innerHTML = "<div class=\"loading\"><div class=\"spinner\"></div>正在解析代理信息...</div>";\n' +
-'    exit.innerHTML = "<div class=\"loading\"><div class=\"spinner\"></div>正在解析代理信息...</div>";\n' +
+'    entry.innerHTML = "<div class=\\"loading\\"><div class=\\"spinner\\"></div>正在解析代理信息...</div>";\n' +
+'    exit.innerHTML = "<div class=\\"loading\\"><div class=\\"spinner\\"></div>正在解析代理信息...</div>";\n' +
 '    try {\n' +
 '      var host = extractHostFromProxy(proxyUrl);\n' +
 '      var targetIP = host;\n' +
 '      var targetProxy = proxyUrl;\n' +
 '      currentDomainInfo = null;\n' +
 '      if (!isIPAddress(host)) {\n' +
-'        entry.innerHTML = "<div class=\"loading\"><div class=\"spinner\"></div>正在解析域名...</div>";\n' +
+'        entry.innerHTML = "<div class=\\"loading\\"><div class=\\"spinner\\"></div>正在解析域名...</div>";\n' +
 '        try {\n' +
 '          currentDomainInfo = await resolveDomainIPs(host);\n' +
 '          targetIP = currentDomainInfo.default_ip;\n' +
 '          targetProxy = replaceHostInProxy(proxyUrl, targetIP);\n' +
 '          currentProxyTemplate = proxyUrl;\n' +
 '        } catch(e) {\n' +
-'          entry.innerHTML = "<div class=\"error\">域名解析失败: " + e.message + "</div>";\n' +
-'          exit.innerHTML = "<div class=\"error\">域名解析失败: " + e.message + "</div>";\n' +
+'          entry.innerHTML = "<div class=\\"error\\">域名解析失败: " + e.message + "</div>";\n' +
+'          exit.innerHTML = "<div class=\\"error\\">域名解析失败: " + e.message + "</div>";\n' +
 '          return;\n' +
 '        }\n' +
 '      }\n' +
-'      entry.innerHTML = "<div class=\"loading\"><div class=\"spinner\"></div>正在获取入口信息...</div>";\n' +
-'      exit.innerHTML = "<div class=\"loading\"><div class=\"spinner\"></div>正在检测代理...</div>";\n' +
+'      entry.innerHTML = "<div class=\\"loading\\"><div class=\\"spinner\\"></div>正在获取入口信息...</div>";\n' +
+'      exit.innerHTML = "<div class=\\"loading\\"><div class=\\"spinner\\"></div>正在检测代理...</div>";\n' +
 '      var entryIP = (targetIP.charAt(0) === "[" && targetIP.charAt(targetIP.length - 1) === "]") ? targetIP.slice(1, -1) : targetIP;\n' +
 '      var results = await Promise.allSettled([\n' +
 '        fetchEntryInfo(entryIP),\n' +
@@ -532,22 +553,22 @@ tokenBadge + '\n' +
 '      var ep = results[0];\n' +
 '      var xp = results[1];\n' +
 '      if (ep.status === "fulfilled") {\n' +
-'        if (ep.value.error) entry.innerHTML = "<div class=\"error\">入口信息获取失败</div>";\n' +
+'        if (ep.value.error) entry.innerHTML = "<div class=\\"error\\">入口信息获取失败</div>";\n' +
 '        else formatInfoDisplay(ep.value, "entryInfo", currentDomainInfo && currentDomainInfo.all_ips.length > 1);\n' +
-'      } else entry.innerHTML = "<div class=\"error\">入口信息获取失败</div>";\n' +
+'      } else entry.innerHTML = "<div class=\\"error\\">入口信息获取失败</div>";\n' +
 '      if (xp.status === "fulfilled") {\n' +
 '        if (!xp.value.success) {\n' +
 '          document.getElementById("exitInfoTitle").textContent = "出口信息(代理不可用)";\n' +
-'          exit.innerHTML = "<div class=\"error\">代理检测失败: " + (xp.value.error || "请检查代理链接") + "</div>";\n' +
+'          exit.innerHTML = "<div class=\\"error\\">代理检测失败: " + (xp.value.error || "请检查代理链接") + "</div>";\n' +
 '        } else formatInfoDisplay(xp.value, "exitInfo", false, xp.value.responseTime);\n' +
 '      } else {\n' +
 '        document.getElementById("exitInfoTitle").textContent = "出口信息(代理不可用)";\n' +
-'        exit.innerHTML = "<div class=\"error\">代理检测失败</div>";\n' +
+'        exit.innerHTML = "<div class=\\"error\\">代理检测失败</div>";\n' +
 '      }\n' +
 '    } catch(e) {\n' +
-'      entry.innerHTML = "<div class=\"error\">检测失败</div>";\n' +
+'      entry.innerHTML = "<div class=\\"error\\">检测失败</div>";\n' +
 '      document.getElementById("exitInfoTitle").textContent = "出口信息(代理不可用)";\n' +
-'      exit.innerHTML = "<div class=\"error\">检测失败</div>";\n' +
+'      exit.innerHTML = "<div class=\\"error\\">检测失败</div>";\n' +
 '    } finally {\n' +
 '      btn.disabled = false;\n' +
 '    }\n' +
@@ -557,12 +578,8 @@ tokenBadge + '\n' +
 '    if (e.key === "Enter") checkProxy();\n' +
 '  });\n' +
 '  document.getElementById("checkBtn").addEventListener("click", checkProxy);\n' +
+'})();\n' +
 '<\/script>\n' +
 '</body>\n' +
 '</html>';
-}
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
