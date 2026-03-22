@@ -434,7 +434,7 @@ tokenBadge + '\n' +
 '      row("滥用IP", bool(data.is_abuser)) +\n' +
 '      row("虚假IP", bool(data.is_bogon)) +\n' +
 '      row("自治系统编号", data.asn && data.asn.asn ? "AS" + data.asn.asn : "N/A") +\n' +
-'      row("所属组织", (data.asn && data.asn.org) || "N/A") +\n' +
+'      row("所属组织", (data.asn && data.asn.org) || (data.company && data.company.name) || (data.asn && data.asn.asn ? "AS" + data.asn.asn : "") || "N/A") +\n' +
 '      row("国家", (data.location && data.location.country_code) || "N/A") +\n' +
 '      row("城市", (data.location && data.location.city) || "N/A");\n' +
 '\n' +

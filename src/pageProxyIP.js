@@ -423,9 +423,8 @@ example.com.tp443.com
     // 格式化 IP 信息（适配 ipapi.is 响应字段）
     function formatIPInfo(info) {
       if (!info || info.error) return '<span style="color:var(--text-light)">信息获取失败</span>';
-      // ipapi.is 字段：info.location.country_code, info.asn.org
       const country = info.location?.country_code || info.country || '未知';
-      const org = info.asn?.org || info.as || '未知';
+      const org = info.asn?.org || info.company?.name || (info.asn?.asn ? 'AS' + info.asn.asn : '') || '未知';
       return '<span class="tag tag-country">' + country + '</span><span class="tag tag-as">' + org + '</span>';
     }
   </script>
