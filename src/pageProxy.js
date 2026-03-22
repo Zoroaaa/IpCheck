@@ -714,9 +714,9 @@ host:8080
       return;
     }
     
-    var items = rawInput.split(/\n/)
+    var items = rawInput.split("\n")
       .map(function(line) { return line.trim(); })
-      .filter(function(line) { return line && !line.startsWith('#'); });
+      .filter(function(line) { return line && line.charAt(0) !== '#'; });
     
     if (items.length === 0) {
       showToast("未找到有效的代理链接");

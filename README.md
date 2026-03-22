@@ -190,7 +190,23 @@ http://host:8080
 
 # IPv6 地址需要用方括号括起来
 socks5://username:password@[2001:db8::1]:1080
+
+# 省略协议前缀（自动识别）
+username:password@host:1080
+host:8080
 ```
+
+**协议自动识别规则**
+
+当省略协议前缀时，系统根据端口号自动识别：
+
+| 端口 | 自动识别为 |
+|:-----|:-----------|
+| 443, 8443 | HTTPS |
+| 80, 8080, 3128, 8888, 8000, 9000 | HTTP |
+| 1080, 10808, 10809, 9050, 7890 | SOCKS5 |
+| 1081 | SOCKS4 |
+| 其他 | SOCKS5（默认） |
 
 **响应示例**
 
@@ -362,7 +378,7 @@ GET /resolve?domain=example.com
 
 ---
 
-### 4️⃣ 查询 IP 信息
+### 5️⃣ 查询 IP 信息
 
 查询 IP 地址的详细信息，数据来源 [ipapi.is](https://ipapi.is)。
 
@@ -534,6 +550,7 @@ CF-Workers-CheckProxy/
     ├── ipInfo.js           # IP 信息查询（统一 ipapi.is）
     ├── checkProxyIP.js     # ProxyIP 检测逻辑
     ├── checkProxy.js       # SOCKS5/HTTP 检测逻辑
+    ├── batchCheck.js       # 批量检测 API
     ├── pageProxyIP.js      # ProxyIP 前端页面
     └── pageProxy.js        # SOCKS5/HTTP 前端页面
 ```
