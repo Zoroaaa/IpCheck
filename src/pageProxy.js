@@ -4,6 +4,9 @@
 
 export function renderProxyPage(hostname, ico, bgStyle, pathToken) {
   const icoTag = ico ? `<link rel="icon" href="${ico}" type="image/x-icon">` : '';
+  const tokenBadge = pathToken ? `<div class="token-badge">🔑 TOKEN验证通过</div>` : '';
+  const secureSubtitle = pathToken ? `<p style="font-size:.9em;opacity:.8;margin-top:5px">🔒 安全模式 - 路径TOKEN验证已启用</p>` : '';
+  const footerToken = pathToken ? `<p style="margin-top:4px;opacity:.6">🔒 当前会话已通过TOKEN验证</p>` : '';
   const tokenScript = pathToken ? `
 <script>
   (function(){
@@ -86,6 +89,9 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .waiting{text-align:center;padding:45px;color:#666;font-size:1.1em}
 .spinner{border:3px solid rgba(200,200,200,.4);border-top:3px solid rgba(100,100,100,.8);border-radius:50%;width:32px;height:32px;animation:spin 1s linear infinite;margin:0 auto 18px}
 .footer{text-align:center;padding:25px;color:#666;font-size:14px;border-top:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.2);backdrop-filter:blur(10px)}
+.token-badge{position:fixed;top:20px;left:20px;background:linear-gradient(135deg,var(--success-color),var(--secondary-color));color:#fff;padding:8px 16px;border-radius:20px;font-size:14px;font-weight:600;z-index:1000;box-shadow:var(--shadow-md)}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--text-primary);color:#fff;padding:12px 20px;border-radius:var(--border-radius-sm);box-shadow:var(--shadow-lg);transform:translateY(100px);opacity:0;transition:var(--transition);z-index:1000}
+.toast.show{transform:translateY(0);opacity:1}
 .api-docs{background:var(--bg-primary);border-radius:var(--border-radius);padding:32px;box-shadow:var(--shadow-lg);margin:20px;position:relative;overflow:hidden}
 .api-docs::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--primary-color),var(--secondary-color))}
 .api-docs:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.12)}
@@ -111,15 +117,17 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 ${tokenScript}
 </head>
 <body>
+${tokenBadge}
 <div class="container">
   <div class="header">
     <div class="header-content">
       <h1>代理检测工具</h1>
       <p>检测代理服务器的出入口信息，支持 SOCKS5 和 HTTP 代理</p>
+      ${secureSubtitle}
     </div>
     <div class="header-input">
       <input type="text" id="proxyInput" placeholder="输入代理链接，例如：socks5://username:password@host:port" />
-      <button id="checkBtn" onclick="checkProxy()">检查代理</button>
+      <button id="checkBtn">检查代理</button>
     </div>
   </div>
 
@@ -238,13 +246,29 @@ socks5://username:password@[2001:db8::1]:1080
     </table>
   </div>
 
-  <div class="footer">© 2025 代理检测服务 - 基于 Cloudflare Workers 构建 | IP数据来源: ipapi.is</div>
+  <div class="footer">© 2025 代理检测服务 - 基于 Cloudflare Workers 构建 | IP数据来源: ipapi.is
+    ${footerToken}
+  </div>
 </div>
+
+  <div id="toast" class="toast"></div>
 
 <script>
   let currentDomainInfo = null;
   let currentProxyTemplate = null;
   const pathToken = ${JSON.stringify(pathToken || '')};
+
+  function showToast(msg, dur = 3000) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), dur);
+  }
+
+  if (pathToken) {
+    document.addEventListener('DOMContentLoaded', function() {
+      showToast('✅ TOKEN验证通过，所有功能已启用', 5000);
+    });
+  }
 
   function preprocessProxyUrl(input) {
     let p = input.trim();
@@ -452,6 +476,7 @@ socks5://username:password@[2001:db8::1]:1080
   }
 
   document.getElementById('proxyInput').addEventListener('keypress', e => { if(e.key==='Enter') checkProxy(); });
+  document.getElementById('checkBtn').addEventListener('click', checkProxy);
 </script>
 </body>
 </html>`;
