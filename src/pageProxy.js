@@ -601,7 +601,8 @@ host:8080
       if (entryData.error) entry.innerHTML = "<div class='error'>入口信息获取失败</div>";
       else formatInfoDisplay(entryData, "entryInfo", true);
       var newProxy = replaceHostInProxy(currentProxyTemplate, selectedIP);
-      var pr = await fetch("/check?proxy=" + encodeURIComponent(newProxy));
+      var tq = pathToken ? "&token=" + encodeURIComponent(pathToken) : "";
+      var pr = await fetch("/check?proxy=" + encodeURIComponent(newProxy) + tq);
       var pd = await pr.json();
       if (!pd.success) {
         document.getElementById("exitInfoTitle").innerHTML = "📤 出口信息 <span class='response-time'>(代理不可用)</span>";
@@ -654,9 +655,10 @@ host:8080
       entry.innerHTML = "<div class='loading'><div class='loading-spinner'></div>正在获取入口信息...</div>";
       exit.innerHTML = "<div class='loading'><div class='loading-spinner'></div>正在检测代理...</div>";
       var entryIP = (targetIP.charAt(0) === "[" && targetIP.charAt(targetIP.length - 1) === "]") ? targetIP.slice(1, -1) : targetIP;
+      var tq = pathToken ? "&token=" + encodeURIComponent(pathToken) : "";
       var results = await Promise.allSettled([
         fetchEntryInfo(entryIP),
-        fetch("/check?proxy=" + encodeURIComponent(targetProxy)).then(function(r) { return r.json(); })
+        fetch("/check?proxy=" + encodeURIComponent(targetProxy) + tq).then(function(r) { return r.json(); })
       ]);
       var ep = results[0];
       var xp = results[1];
