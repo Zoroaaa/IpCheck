@@ -3,15 +3,17 @@
 // ============================================================
 
 /**
- * 双重 MD5 哈希，用于生成临时 TOKEN
+ * 双重 SHA-256 哈希，用于生成临时 TOKEN
  * ProxyIP 项目时间窗口 31 分钟，Socks5 项目 12 小时。
  * 合并后统一用 31 分钟（更安全），若需宽松可改为 720）。
+ * 
+ * 安全升级：从 MD5 升级为 SHA-256（MD5 已被破解，不适用于安全场景）
  */
 export async function 双重哈希(文本) {
   const enc = new TextEncoder();
-  const h1 = await crypto.subtle.digest('MD5', enc.encode(文本));
+  const h1 = await crypto.subtle.digest('SHA-256', enc.encode(文本));
   const hex1 = Array.from(new Uint8Array(h1)).map(b => b.toString(16).padStart(2, '0')).join('');
-  const h2 = await crypto.subtle.digest('MD5', enc.encode(hex1.slice(7, 27)));
+  const h2 = await crypto.subtle.digest('SHA-256', enc.encode(hex1.slice(7, 27)));
   return Array.from(new Uint8Array(h2)).map(b => b.toString(16).padStart(2, '0')).join('').toLowerCase();
 }
 

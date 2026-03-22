@@ -11,3 +11,4 @@ compatibility_flags = ["nodejs_compat"]
 # BEIAN = "ICP备XXXXXXXX号"
 # URL302 = "https://example.com"
 # URL    = "https://example.com"
+# RATE_LIMIT = "60"  # 每分钟最大请求数（默认 60）

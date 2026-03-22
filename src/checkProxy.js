@@ -4,6 +4,22 @@
 import { connect } from 'cloudflare:sockets';
 import { getIpInfo } from './ipInfo.js';
 
+// -------- 超时配置常量 --------
+const CONNECT_TIMEOUT = 8000;      // 连接超时：8秒
+const READ_TIMEOUT = 10000;        // 读取超时：10秒
+const HANDSHAKE_TIMEOUT = 5000;    // 握手超时：5秒
+
+// -------- 超时辅助函数 --------
+function createTimeoutPromise(ms, message) {
+  return new Promise((_, reject) => {
+    setTimeout(() => reject(new Error(message)), ms);
+  });
+}
+
+async function withTimeout(promise, ms, message) {
+  return Promise.race([promise, createTimeoutPromise(ms, message)]);
+}
+
 // -------- 解析代理地址 --------
 export async function 获取SOCKS5账号(address) {
   if (address.includes('@')) {
@@ -41,10 +57,16 @@ export async function 获取SOCKS5账号(address) {
 // -------- HTTP CONNECT 代理 --------
 async function httpConnect(target, targetPort, proxyInfo) {
   const { username, password, hostname, port } = proxyInfo;
-  const sock = await connect({ hostname, port });
-  const w = sock.writable.getWriter();
-  const r = sock.readable.getReader();
+  let sock, w, r;
   try {
+    sock = await withTimeout(
+      connect({ hostname, port }).then(s => { sock = s; return s.opened; }).then(() => sock),
+      CONNECT_TIMEOUT,
+      `连接代理服务器超时（${CONNECT_TIMEOUT / 1000}秒）`
+    );
+    w = sock.writable.getWriter();
+    r = sock.readable.getReader();
+    
     let req = `CONNECT ${target}:${targetPort} HTTP/1.1\r\nHost: ${target}:${targetPort}\r\n`;
     if (username && password) req += `Proxy-Authorization: Basic ${btoa(`${username}:${password}`)}\r\n`;
     req += `User-Agent: Mozilla/5.0\r\nProxy-Connection: Keep-Alive\r\nConnection: Keep-Alive\r\n\r\n`;
@@ -52,8 +74,12 @@ async function httpConnect(target, targetPort, proxyInfo) {
 
     let buf = new Uint8Array(0);
     let hdrEnd = -1;
+    const readStartTime = Date.now();
     while (hdrEnd === -1 && buf.length < 8192) {
-      const { done, value } = await r.read();
+      if (Date.now() - readStartTime > HANDSHAKE_TIMEOUT) {
+        throw new Error(`HTTP代理响应超时（${HANDSHAKE_TIMEOUT / 1000}秒）`);
+      }
+      const { done, value } = await withTimeout(r.read(), READ_TIMEOUT, '读取代理响应超时');
       if (done) throw new Error('HTTP代理连接中断');
       const nb = new Uint8Array(buf.length + value.length);
       nb.set(buf); nb.set(value, buf.length); buf = nb;
@@ -67,7 +93,6 @@ async function httpConnect(target, targetPort, proxyInfo) {
     if (!m) throw new Error(`HTTP代理响应格式无效: ${hdr.split('\r\n')[0]}`);
     if (parseInt(m[1]) < 200 || parseInt(m[1]) >= 300) throw new Error(`HTTP代理连接失败 [${m[1]}]`);
 
-    // 处理头部之后的多余数据
     if (hdrEnd < buf.length) {
       const remaining = buf.slice(hdrEnd);
       const { readable, writable } = new TransformStream();
@@ -77,9 +102,9 @@ async function httpConnect(target, targetPort, proxyInfo) {
     w.releaseLock(); r.releaseLock();
     return sock;
   } catch (e) {
-    try { w.releaseLock(); } catch (_) {}
-    try { r.releaseLock(); } catch (_) {}
-    try { sock.close(); } catch (_) {}
+    try { if (w) w.releaseLock(); } catch (_) {}
+    try { if (r) r.releaseLock(); } catch (_) {}
+    try { if (sock) sock.close(); } catch (_) {}
     throw new Error(`HTTP代理连接失败: ${e.message}`);
   }
 }
@@ -88,33 +113,42 @@ async function httpConnect(target, targetPort, proxyInfo) {
 async function socks5Connect(target, targetPort, proxyInfo, addrType = 3) {
   const { username, password, hostname, port } = proxyInfo;
   const enc = new TextEncoder();
-  const socket = connect({ hostname, port });
-  const w = socket.writable.getWriter();
-  const r = socket.readable.getReader();
+  let socket, w, r;
+  try {
+    socket = connect({ hostname, port });
+    await withTimeout(socket.opened, CONNECT_TIMEOUT, `连接代理服务器超时（${CONNECT_TIMEOUT / 1000}秒）`);
+    w = socket.writable.getWriter();
+    r = socket.readable.getReader();
 
-  await w.write(new Uint8Array([5, 2, 0, 2]));
-  let res = (await r.read()).value;
-  if (res[0] !== 0x05 || res[1] === 0xff) throw new Error('SOCKS5握手失败：服务器拒绝认证方式');
+    await w.write(new Uint8Array([5, 2, 0, 2]));
+    let res = (await withTimeout(r.read(), HANDSHAKE_TIMEOUT, 'SOCKS5握手响应超时')).value;
+    if (!res || res[0] !== 0x05 || res[1] === 0xff) throw new Error('SOCKS5握手失败：服务器拒绝认证方式');
 
-  if (res[1] === 0x02) {
-    if (!username || !password) throw new Error('SOCKS5需要认证但未提供用户名/密码');
-    await w.write(new Uint8Array([1, username.length, ...enc.encode(username), password.length, ...enc.encode(password)]));
-    res = (await r.read()).value;
-    if (res[0] !== 0x01 || res[1] !== 0x00) throw new Error('SOCKS5认证失败');
+    if (res[1] === 0x02) {
+      if (!username || !password) throw new Error('SOCKS5需要认证但未提供用户名/密码');
+      await w.write(new Uint8Array([1, username.length, ...enc.encode(username), password.length, ...enc.encode(password)]));
+      res = (await withTimeout(r.read(), HANDSHAKE_TIMEOUT, 'SOCKS5认证响应超时')).value;
+      if (!res || res[0] !== 0x01 || res[1] !== 0x00) throw new Error('SOCKS5认证失败');
+    }
+
+    const DSTADDR = addrType === 1
+      ? new Uint8Array([1, ...target.split('.').map(Number)])
+      : addrType === 3
+        ? new Uint8Array([3, target.length, ...enc.encode(target)])
+        : new Uint8Array([4, ...target.split(':').flatMap(x => [parseInt(x.slice(0, 2), 16), parseInt(x.slice(2), 16)])]);
+
+    await w.write(new Uint8Array([5, 1, 0, ...DSTADDR, targetPort >> 8, targetPort & 0xff]));
+    res = (await withTimeout(r.read(), HANDSHAKE_TIMEOUT, 'SOCKS5连接响应超时')).value;
+    if (!res || res[1] !== 0x00) throw new Error(`SOCKS5连接失败: 错误码 0x${res[1]?.toString(16) || 'unknown'}`);
+
+    w.releaseLock(); r.releaseLock();
+    return socket;
+  } catch (e) {
+    try { if (w) w.releaseLock(); } catch (_) {}
+    try { if (r) r.releaseLock(); } catch (_) {}
+    try { if (socket) socket.close(); } catch (_) {}
+    throw new Error(`SOCKS5连接失败: ${e.message}`);
   }
-
-  const DSTADDR = addrType === 1
-    ? new Uint8Array([1, ...target.split('.').map(Number)])
-    : addrType === 3
-      ? new Uint8Array([3, target.length, ...enc.encode(target)])
-      : new Uint8Array([4, ...target.split(':').flatMap(x => [parseInt(x.slice(0, 2), 16), parseInt(x.slice(2), 16)])]);
-
-  await w.write(new Uint8Array([5, 1, 0, ...DSTADDR, targetPort >> 8, targetPort & 0xff]));
-  res = (await r.read()).value;
-  if (res[1] !== 0x00) throw new Error(`SOCKS5连接失败: 错误码 0x${res[1].toString(16)}`);
-
-  w.releaseLock(); r.releaseLock();
-  return socket;
 }
 
 // -------- 检测目标地址（固定用 check.socks5.090227.xyz:80） --------
@@ -155,9 +189,13 @@ export async function SOCKS5可用性验证(protocol, rawParam) {
       const rdr = sock.readable.getReader();
       const dec = new TextDecoder();
       let resp = '';
+      const readStartTime = Date.now();
       try {
         while (true) {
-          const { done, value } = await rdr.read();
+          if (Date.now() - readStartTime > READ_TIMEOUT) {
+            throw new Error(`读取代理响应超时（${READ_TIMEOUT / 1000}秒）`);
+          }
+          const { done, value } = await withTimeout(rdr.read(), READ_TIMEOUT, '读取代理响应超时');
           if (done) break;
           resp += dec.decode(value, { stream: true });
         }

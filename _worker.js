@@ -23,6 +23,9 @@
 //    ICO     — 网站图标 URL
 //    IMG     — 背景图片 URL（逗号分隔，仅 Socks5 页面生效）
 //    BEIAN   — 页脚备案信息
+//    RATE_LIMIT — 请求频率限制（每分钟最大请求数，默认 60）
+//
+//  修复：添加请求频率限制机制
 // ============================================================
 
 import { initTokens, parsePathToken, validateQueryToken, forbidden } from './src/auth.js';
@@ -33,11 +36,73 @@ import { handleCheckProxy } from './src/checkProxy.js';
 import { renderProxyIPPage } from './src/pageProxyIP.js';
 import { renderProxyPage } from './src/pageProxy.js';
 
+// ---------- 请求频率限制配置 ----------
+const RATE_LIMIT_DEFAULT = 60;           // 默认每分钟最大请求数
+const RATE_LIMIT_WINDOW = 60000;         // 时间窗口：60秒（毫秒）
+const rateLimitStore = new Map();        // 频率限制存储（内存缓存）
+
+/**
+ * 检查请求频率限制
+ * @param {string} clientIP - 客户端 IP
+ * @param {number} limit - 每分钟最大请求数
+ * @returns {{ allowed: boolean, remaining: number, resetTime: number }}
+ */
+function checkRateLimit(clientIP, limit) {
+  const now = Date.now();
+  const windowStart = Math.floor(now / RATE_LIMIT_WINDOW) * RATE_LIMIT_WINDOW;
+  const key = `${clientIP}:${windowStart}`;
+  
+  const current = rateLimitStore.get(key) || 0;
+  const remaining = Math.max(0, limit - current);
+  const resetTime = windowStart + RATE_LIMIT_WINDOW;
+  
+  if (current >= limit) {
+    return { allowed: false, remaining: 0, resetTime };
+  }
+  
+  rateLimitStore.set(key, current + 1);
+  
+  // 清理过期的记录（每 100 次请求清理一次）
+  if (rateLimitStore.size > 1000) {
+    for (const [k] of rateLimitStore) {
+      const keyTime = parseInt(k.split(':')[1]);
+      if (keyTime < windowStart - RATE_LIMIT_WINDOW) {
+        rateLimitStore.delete(k);
+      }
+    }
+  }
+  
+  return { allowed: true, remaining: remaining - 1, resetTime };
+}
+
+/**
+ * 生成频率限制超时响应
+ */
+function rateLimitResponse(resetTime) {
+  const retryAfter = Math.ceil((resetTime - Date.now()) / 1000);
+  return new Response(JSON.stringify({
+    status: 'error',
+    message: `请求频率超限，请在 ${retryAfter} 秒后重试`,
+    code: 'RATE_LIMIT_EXCEEDED',
+    retryAfter,
+    timestamp: new Date().toISOString(),
+  }, null, 2), {
+    status: 429,
+    headers: {
+      'Content-Type': 'application/json; charset=UTF-8',
+      'Access-Control-Allow-Origin': '*',
+      'Retry-After': String(retryAfter),
+      'X-RateLimit-Reset': String(resetTime),
+    },
+  });
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const UA = request.headers.get('User-Agent') || 'null';
     const hostname = url.hostname;
+    const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
 
     // ---------- TOKEN 初始化 ----------
     const { 临时TOKEN, 永久TOKEN } = await initTokens(hostname, UA, env);
@@ -49,6 +114,17 @@ export default {
       if (已验证) return null;     // 路径TOKEN已验证
       if (validateQueryToken(url.searchParams, 临时TOKEN, 永久TOKEN)) return null;
       return forbidden();
+    }
+
+    // ---------- 请求频率限制（仅对 API 接口生效）----------
+    function checkApiRateLimit() {
+      if (已验证) return null;  // 已验证 TOKEN 的用户不受限制
+      const limit = parseInt(env.RATE_LIMIT) || RATE_LIMIT_DEFAULT;
+      const result = checkRateLimit(clientIP, limit);
+      if (!result.allowed) {
+        return rateLimitResponse(result.resetTime);
+      }
+      return null;
     }
 
     // ---------- favicon ----------
@@ -65,6 +141,9 @@ export default {
     if (实际路径 === '/check') {
       const authErr = requireToken();
       if (authErr) return authErr;
+      
+      const rateErr = checkApiRateLimit();
+      if (rateErr) return rateErr;
 
       // 判断是 ProxyIP 检测还是 Socks5/HTTP 检测
       if (url.searchParams.has('proxyip')) {
@@ -79,6 +158,10 @@ export default {
     if (实际路径 === '/resolve') {
       const authErr = requireToken();
       if (authErr) return authErr;
+      
+      const rateErr = checkApiRateLimit();
+      if (rateErr) return rateErr;
+      
       const domain = url.searchParams.get('domain');
       if (!domain) return new Response('Missing domain parameter', { status: 400 });
       try {
@@ -95,6 +178,10 @@ export default {
       if (env.TOKEN && !已验证 && !validateQueryToken(url.searchParams, 临时TOKEN, 永久TOKEN)) {
         return forbidden('IP查询失败: 无效的TOKEN');
       }
+      
+      const rateErr = checkApiRateLimit();
+      if (rateErr) return rateErr;
+      
       return handleIpInfo(request, url);
     }
 
