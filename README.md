@@ -24,11 +24,13 @@
 | 🌐 **ProxyIP 检测** | 检测能够反向代理 Cloudflare IP 段的服务器，支持 TLS 握手验证，最多重试 4 次 |
 | 🔌 **SOCKS5 检测** | 检测 SOCKS5 代理连通性，支持用户名/密码认证、Base64 编码凭证 |
 | 🌍 **HTTP 代理检测** | 检测 HTTP CONNECT 代理连通性，支持 Proxy-Authorization 认证 |
+| 📦 **批量检测** | 支持批量检测 ProxyIP 和代理，最多 50 个并发，自动分组并行处理 |
 | 🔍 **域名解析** | 自动解析域名 A/AAAA 记录，并发检测所有 IP，支持一键切换 |
 | 📊 **IP 信息查询** | 统一使用 [ipapi.is](https://ipapi.is)，返回 ASN、地理位置、风险评分等完整信息 |
 | 🔒 **TOKEN 鉴权** | 支持路径 TOKEN 和参数 TOKEN，设置后首页自动伪装为 nginx |
 | 🛡️ **频率限制** | 内置请求频率限制机制，防止滥用（已验证 TOKEN 用户不受限制） |
 | 📱 **响应式界面** | 两个独立工具页面 + 统一导航首页，完美适配移动端 |
+| 🧠 **协议自动识别** | 根据端口号自动识别代理协议（SOCKS5/HTTP/HTTPS），无需手动添加前缀 |
 
 ---
 
@@ -245,7 +247,100 @@ socks5://username:password@[2001:db8::1]:1080
 
 ---
 
-### 3️⃣ 解析域名
+### 3️⃣ 批量检测
+
+支持批量检测 ProxyIP 或代理，最多 50 个项目同时检测。
+
+**请求**
+
+```http
+POST /batch-check
+Content-Type: application/json
+
+{
+  "type": "proxyip" | "proxy",
+  "items": ["item1", "item2", ...]
+}
+```
+
+**参数说明**
+
+| 参数 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `type` | string | 是 | 检测类型：`proxyip` 或 `proxy` |
+| `items` | string[] | 是 | 待检测项目数组，最多 50 个 |
+
+**批量检测 ProxyIP 示例**
+
+```bash
+curl -X POST https://your-worker.dev/batch-check \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "proxyip",
+    "items": ["1.2.3.4:443", "5.6.7.8:443", "example.com"]
+  }'
+```
+
+**批量检测代理示例**
+
+```bash
+curl -X POST https://your-worker.dev/batch-check \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "proxy",
+    "items": [
+      "socks5://user:pass@1.2.3.4:1080",
+      "http://host:8080",
+      "user:pass@host:1080"
+    ]
+  }'
+```
+
+**响应示例**
+
+```json
+{
+  "success": true,
+  "type": "proxyip",
+  "total": 3,
+  "successCount": 2,
+  "failCount": 1,
+  "responseTime": 3456,
+  "timestamp": "2025-06-03T17:27:52.946Z",
+  "results": [
+    {
+      "input": "1.2.3.4:443",
+      "success": true,
+      "proxyIP": "1.2.3.4",
+      "portRemote": 443,
+      "responseTime": 166,
+      "message": "第1次验证有效ProxyIP"
+    },
+    {
+      "input": "5.6.7.8:443",
+      "success": false,
+      "proxyIP": "5.6.7.8",
+      "message": "无法通过ProxyIP访问Cloudflare"
+    }
+  ]
+}
+```
+
+**响应字段说明**
+
+| 字段 | 类型 | 说明 |
+|:-----|:-----|:-----|
+| `success` | boolean | 请求是否成功 |
+| `type` | string | 检测类型 |
+| `total` | number | 总检测数量 |
+| `successCount` | number | 成功数量 |
+| `failCount` | number | 失败数量 |
+| `responseTime` | number | 总响应时间（毫秒） |
+| `results` | array | 检测结果数组 |
+
+---
+
+### 4️⃣ 解析域名
 
 解析域名返回所有 A 记录和 AAAA 记录。
 

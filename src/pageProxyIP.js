@@ -54,6 +54,10 @@ export function renderProxyIPPage(hostname, ico, pathToken) {
     .hero h1{font-size:clamp(1.8rem,4vw,2.5rem);font-weight:800;letter-spacing:-.02em;line-height:1.2;margin-bottom:10px;color:var(--text-dark)}
     .hero p{font-size:1rem;color:var(--text-body);max-width:500px;margin:0 auto}
     .card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:24px;box-shadow:var(--shadow)}
+    .mode-tabs{display:flex;gap:8px;margin-bottom:20px}
+    .mode-tab{flex:1;padding:12px 20px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s ease;background:var(--bg-input);color:var(--text-body)}
+    .mode-tab:hover{border-color:var(--primary-light)}
+    .mode-tab.active{border-color:var(--primary);background:linear-gradient(135deg,rgba(99,102,241,.1),rgba(99,102,241,.05));color:var(--primary-dark)}
     .form-section{margin-bottom:0}
     .form-label{display:block;font-weight:600;font-size:.95rem;margin-bottom:10px;color:var(--text-dark)}
     .input-group{display:flex;gap:12px;align-items:stretch}
@@ -61,6 +65,9 @@ export function renderProxyIPPage(hostname, ico, pathToken) {
     .form-input{width:100%;padding:14px 18px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-family:inherit;transition:all .2s ease;background:var(--bg-input);color:var(--text-dark)}
     .form-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px rgba(99,102,241,.1);background:#fff}
     .form-input::placeholder{color:var(--text-muted)}
+    .form-textarea{width:100%;padding:14px 18px;border:2px solid var(--border);border-radius:12px;font-size:14px;font-family:'SF Mono',Monaco,Consolas,monospace;transition:all .2s ease;background:var(--bg-input);color:var(--text-dark);min-height:150px;resize:vertical;line-height:1.6}
+    .form-textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px rgba(99,102,241,.1);background:#fff}
+    .form-textarea::placeholder{color:var(--text-muted)}
     .btn{padding:14px 28px;border:none;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s ease;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:120px}
     .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;box-shadow:0 4px 12px rgba(99,102,241,.25)}
     .btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(99,102,241,.35)}
@@ -90,6 +97,22 @@ export function renderProxyIPPage(hostname, ico, pathToken) {
     .ip-item:hover{background:var(--bg-hover)}
     .ip-item.valid{background:linear-gradient(135deg,#ecfdf5,#f0fdf4);border-color:#a7f3d0}
     .ip-item.invalid{background:linear-gradient(135deg,#fef2f2,#fef2f2);border-color:#fecaca}
+    .batch-results{margin-top:16px}
+    .batch-summary{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;padding:14px;background:var(--bg-hover);border-radius:10px;border:1px solid var(--border)}
+    .batch-stat{display:flex;align-items:center;gap:6px;font-size:.9rem}
+    .batch-stat-label{color:var(--text-muted)}
+    .batch-stat-value{font-weight:700;color:var(--text-dark)}
+    .batch-stat-value.success{color:var(--success)}
+    .batch-stat-value.error{color:var(--error)}
+    .batch-list{max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:10px}
+    .batch-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);transition:background .2s}
+    .batch-item:last-child{border-bottom:none}
+    .batch-item:hover{background:var(--bg-hover)}
+    .batch-item-info{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+    .batch-item-ip{font-family:'SF Mono',Monaco,Consolas,monospace;font-size:.9rem;color:var(--text-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .batch-item-tags{display:flex;gap:4px;flex-wrap:nowrap}
+    .batch-item-status{display:flex;align-items:center;gap:8px}
+    .batch-item-time{font-size:.8rem;color:var(--text-muted)}
     .ip-status-line{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
     .status-badge{padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600}
     .status-badge.success{background:var(--success);color:#fff}
@@ -150,18 +173,39 @@ export function renderProxyIPPage(hostname, ico, pathToken) {
     </div>
 
     <div class="card">
-      <div class="form-section">
-        <label for="proxyip" class="form-label">输入 ProxyIP 地址</label>
-        <div class="input-group">
-          <div class="input-wrapper">
-            <input type="text" id="proxyip" class="form-input" placeholder="例如: 1.2.3.4:443 或 example.com" autocomplete="off">
+      <div class="mode-tabs">
+        <button class="mode-tab active" onclick="switchMode('single')">单个检测</button>
+        <button class="mode-tab" onclick="switchMode('batch')">批量检测</button>
+      </div>
+      
+      <div id="singleMode">
+        <div class="form-section">
+          <label for="proxyip" class="form-label">输入 ProxyIP 地址</label>
+          <div class="input-group">
+            <div class="input-wrapper">
+              <input type="text" id="proxyip" class="form-input" placeholder="例如: 1.2.3.4:443 或 example.com" autocomplete="off">
+            </div>
+            <button id="checkBtn" class="btn btn-primary" onclick="checkProxyIP()">
+              <span class="btn-text">开始检测</span>
+              <div class="loading-spinner" style="display:none"></div>
+            </button>
           </div>
-          <button id="checkBtn" class="btn btn-primary" onclick="checkProxyIP()">
-            <span class="btn-text">开始检测</span>
-            <div class="loading-spinner" style="display:none"></div>
-          </button>
         </div>
       </div>
+      
+      <div id="batchMode" style="display:none">
+        <div class="form-section">
+          <label for="batchInput" class="form-label">批量输入 ProxyIP（每行一个，最多 50 个）</label>
+          <textarea id="batchInput" class="form-textarea" placeholder="1.2.3.4:443&#10;5.6.7.8:443&#10;example.com&#10;[2001:db8::1]:443"></textarea>
+          <div class="input-group" style="margin-top:12px">
+            <button id="batchCheckBtn" class="btn btn-primary" onclick="batchCheckProxyIP()">
+              <span class="btn-text">批量检测</span>
+              <div class="loading-spinner" style="display:none"></div>
+            </button>
+          </div>
+        </div>
+      </div>
+      
       <div id="result" class="result-section"></div>
     </div>
 
@@ -212,6 +256,14 @@ example.com.tp443.com
       <h3>检查 ProxyIP</h3>
       <div class="code-block"><span class="method">GET</span> /check?proxyip=<span class="highlight">YOUR_PROXY_IP</span></div>
       
+      <h3>批量检测 ProxyIP</h3>
+      <div class="code-block"><span class="method">POST</span> /batch-check<br><br>
+{<br>
+&nbsp;&nbsp;"type": "proxyip",<br>
+&nbsp;&nbsp;"items": ["1.2.3.4:443", "5.6.7.8:443"]<br>
+}</div>
+      <p style="margin-top:6px;font-size:.85rem">最多支持 50 个 ProxyIP 同时检测</p>
+      
       <h3>使用示例</h3>
       <div class="code-block">curl "${curlExample}"</div>
       
@@ -247,9 +299,21 @@ example.com.tp443.com
 
   <script>
     let isChecking = false;
+    let currentMode = 'single';
     const ipCheckResults = new Map();
     let pageLoadTimestamp;
     const pathToken = ${JSON.stringify(pathToken || '')};
+
+    function switchMode(mode) {
+      currentMode = mode;
+      const tabs = document.querySelectorAll('.mode-tab');
+      tabs.forEach(tab => tab.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('singleMode').style.display = mode === 'single' ? 'block' : 'none';
+      document.getElementById('batchMode').style.display = mode === 'batch' ? 'block' : 'none';
+      document.getElementById('result').classList.remove('show');
+      document.getElementById('result').innerHTML = '';
+    }
 
     function calculateTimestamp() {
       return Math.ceil(Date.now() / (1000 * 60 * 31));
@@ -445,6 +509,123 @@ example.com.tp443.com
       const country = info.location?.country_code || info.country || '未知';
       const org = info.asn?.org || info.company?.name || (info.asn?.asn ? 'AS' + info.asn.asn : '') || '未知';
       return '<span class="tag tag-country">' + country + '</span><span class="tag tag-as">' + org + '</span>';
+    }
+
+    async function batchCheckProxyIP() {
+      if (isChecking) return;
+      const textarea = document.getElementById('batchInput');
+      const resultDiv = document.getElementById('result');
+      const btn = document.getElementById('batchCheckBtn');
+      const btnText = btn.querySelector('.btn-text');
+      const spinner = btn.querySelector('.loading-spinner');
+      
+      const rawInput = textarea.value.trim();
+      if (!rawInput) {
+        showToast('请输入要检测的 ProxyIP 列表');
+        textarea.focus();
+        return;
+      }
+      
+      const items = rawInput.split(/\\n/)
+        .map(line => line.trim())
+        .filter(line => line && !line.startsWith('#'));
+      
+      if (items.length === 0) {
+        showToast('未找到有效的 ProxyIP 地址');
+        return;
+      }
+      
+      if (items.length > 50) {
+        showToast('最多支持 50 个 ProxyIP 同时检测');
+        return;
+      }
+      
+      isChecking = true;
+      btn.disabled = true;
+      btnText.style.display = 'none';
+      spinner.style.display = 'block';
+      resultDiv.classList.remove('show');
+      
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        const body = JSON.stringify({ type: 'proxyip', items });
+        
+        let url = './batch-check';
+        if (pathToken) url += '?token=' + encodeURIComponent(pathToken);
+        
+        const resp = await fetch(url, { method: 'POST', headers, body });
+        const data = await resp.json();
+        
+        if (!data.success) {
+          throw new Error(data.error || '批量检测失败');
+        }
+        
+        renderBatchResults(data, resultDiv);
+      } catch (err) {
+        resultDiv.innerHTML = '<div class="result-card result-error"><h3>❌ 批量检测失败</h3><div class="result-row"><strong>错误信息:</strong> ' + err.message + '</div></div>';
+        resultDiv.classList.add('show');
+      } finally {
+        isChecking = false;
+        btn.disabled = false;
+        btnText.style.display = 'block';
+        spinner.style.display = 'none';
+      }
+    }
+
+    function renderBatchResults(data, resultDiv) {
+      const { total, successCount, failCount, responseTime, results } = data;
+      
+      const successItems = results.filter(r => r.success);
+      const failItems = results.filter(r => !r.success);
+      
+      let html = '<div class="result-card ' + (failCount === 0 ? 'result-success' : successCount === 0 ? 'result-error' : 'result-warning') + '">';
+      html += '<h3>' + (failCount === 0 ? '✅ 全部检测通过' : successCount === 0 ? '❌ 全部检测失败' : '⚠️ 部分检测通过') + '</h3>';
+      html += '<div class="batch-summary">';
+      html += '<div class="batch-stat"><span class="batch-stat-label">总计:</span><span class="batch-stat-value">' + total + '</span></div>';
+      html += '<div class="batch-stat"><span class="batch-stat-label">成功:</span><span class="batch-stat-value success">' + successCount + '</span></div>';
+      html += '<div class="batch-stat"><span class="batch-stat-label">失败:</span><span class="batch-stat-value error">' + failCount + '</span></div>';
+      html += '<div class="batch-stat"><span class="batch-stat-label">耗时:</span><span class="batch-stat-value">' + responseTime + 'ms</span></div>';
+      html += '</div>';
+      
+      if (successItems.length > 0) {
+        html += '<div style="margin-bottom:12px;font-weight:600;color:var(--success)">✅ 有效 ProxyIP (' + successItems.length + ')</div>';
+        html += '<div class="batch-list">';
+        successItems.forEach(item => {
+          html += '<div class="batch-item">';
+          html += '<div class="batch-item-info">';
+          html += '<span class="batch-item-ip">' + (item.proxyIP || item.input) + '</span>';
+          html += '</div>';
+          html += '<div class="batch-item-status">';
+          if (item.responseTime > 0) {
+            html += '<span class="status-badge success">' + item.responseTime + 'ms</span>';
+          } else {
+            html += '<span class="status-badge success">有效</span>';
+          }
+          html += '</div>';
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+      
+      if (failItems.length > 0) {
+        html += '<div style="margin:16px 0 12px;font-weight:600;color:var(--error)">❌ 失效 ProxyIP (' + failItems.length + ')</div>';
+        html += '<div class="batch-list">';
+        failItems.forEach(item => {
+          html += '<div class="batch-item">';
+          html += '<div class="batch-item-info">';
+          html += '<span class="batch-item-ip">' + (item.proxyIP || item.input) + '</span>';
+          html += '</div>';
+          html += '<div class="batch-item-status">';
+          html += '<span class="status-badge error">失效</span>';
+          html += '</div>';
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+      
+      html += '</div>';
+      resultDiv.innerHTML = html;
+      resultDiv.classList.add('show');
     }
   </script>
 </body>

@@ -84,12 +84,19 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
 .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;background:linear-gradient(135deg,rgba(16,185,129,.1),rgba(16,185,129,.05));border-radius:100px;font-size:.85rem;color:var(--primary-dark);margin-bottom:16px;font-weight:500}
 .hero h1{font-size:clamp(1.8rem,4vw,2.5rem);font-weight:800;letter-spacing:-.02em;line-height:1.2;margin-bottom:10px;color:var(--text-dark)}
 .hero p{font-size:1rem;color:var(--text-body);max-width:500px;margin:0 auto}
+.mode-tabs{display:flex;gap:8px;margin-bottom:20px}
+.mode-tab{flex:1;padding:12px 20px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s ease;background:var(--bg-input);color:var(--text-body)}
+.mode-tab:hover{border-color:var(--primary-light)}
+.mode-tab.active{border-color:var(--primary);background:linear-gradient(135deg,rgba(16,185,129,.1),rgba(16,185,129,.05));color:var(--primary-dark)}
 .input-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:24px;box-shadow:var(--shadow)}
 .input-group{display:flex;gap:12px;align-items:stretch}
 .input-wrapper{flex:1}
 .form-input{width:100%;padding:14px 18px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-family:inherit;transition:all .2s ease;background:var(--bg-input);color:var(--text-dark)}
 .form-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px rgba(16,185,129,.1);background:#fff}
 .form-input::placeholder{color:var(--text-muted)}
+.form-textarea{width:100%;padding:14px 18px;border:2px solid var(--border);border-radius:12px;font-size:14px;font-family:'SF Mono',Monaco,Consolas,monospace;transition:all .2s ease;background:var(--bg-input);color:var(--text-dark);min-height:150px;resize:vertical;line-height:1.6}
+.form-textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px rgba(16,185,129,.1);background:#fff}
+.form-textarea::placeholder{color:var(--text-muted)}
 .btn{padding:14px 28px;border:none;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s ease;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:140px}
 .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;box-shadow:0 4px 12px rgba(16,185,129,.25)}
 .btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(16,185,129,.35)}
@@ -117,6 +124,20 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
 .ip-option:hover{background:var(--bg-hover)}
 .ip-option.active{background:linear-gradient(135deg,#ecfdf5,#d1fae5);color:var(--primary-dark)}
 .ip-value-container{position:relative}
+.batch-results{margin-top:16px}
+.batch-summary{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;padding:14px;background:var(--bg-hover);border-radius:10px;border:1px solid var(--border)}
+.batch-stat{display:flex;align-items:center;gap:6px;font-size:.9rem}
+.batch-stat-label{color:var(--text-muted)}
+.batch-stat-value{font-weight:700;color:var(--text-dark)}
+.batch-stat-value.success{color:var(--success)}
+.batch-stat-value.error{color:var(--error)}
+.batch-list{max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:10px}
+.batch-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);transition:background .2s}
+.batch-item:last-child{border-bottom:none}
+.batch-item:hover{background:var(--bg-hover)}
+.batch-item-info{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.batch-item-proxy{font-family:'SF Mono',Monaco,Consolas,monospace;font-size:.85rem;color:var(--text-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px}
+.batch-item-status{display:flex;align-items:center;gap:8px}
 .loading{text-align:center;padding:30px;color:var(--text-muted)}
 .error{text-align:center;padding:20px;color:var(--error);background:linear-gradient(135deg,#fef2f2,#fee2e2);border-radius:10px;margin:10px;border:1px solid #fecaca;font-size:.9rem}
 .waiting{text-align:center;padding:30px;color:var(--text-muted);font-size:.9rem}
@@ -172,18 +193,44 @@ ${tokenBadge}
   </div>
 
   <div class="input-card">
-    <div class="input-group">
-      <div class="input-wrapper">
-        <input type="text" id="proxyInput" class="form-input" placeholder="输入代理链接，例如：socks5://username:password@host:port">
+    <div class="mode-tabs">
+      <button class="mode-tab active" id="singleTabBtn" onclick="switchMode('single')">单个检测</button>
+      <button class="mode-tab" id="batchTabBtn" onclick="switchMode('batch')">批量检测</button>
+    </div>
+    
+    <div id="singleMode">
+      <div class="input-group">
+        <div class="input-wrapper">
+          <input type="text" id="proxyInput" class="form-input" placeholder="输入代理链接，例如：socks5://username:password@host:port">
+        </div>
+        <button id="checkBtn" class="btn btn-primary">
+          <span class="btn-text">开始检测</span>
+          <div class="loading-spinner" style="display:none"></div>
+        </button>
       </div>
-      <button id="checkBtn" class="btn btn-primary">
-        <span class="btn-text">开始检测</span>
-        <div class="loading-spinner" style="display:none"></div>
-      </button>
+    </div>
+    
+    <div id="batchMode" style="display:none">
+      <label for="batchInput" style="display:block;font-weight:600;font-size:.95rem;margin-bottom:10px;color:var(--text-dark)">批量输入代理链接（每行一个，最多 50 个）</label>
+      <textarea id="batchInput" class="form-textarea" placeholder="socks5://user:pass@1.2.3.4:1080&#10;http://user:pass@5.6.7.8:8080&#10;socks5://host:1080"></textarea>
+      <div class="input-group" style="margin-top:12px">
+        <button id="batchCheckBtn" class="btn btn-primary">
+          <span class="btn-text">批量检测</span>
+          <div class="loading-spinner" style="display:none"></div>
+        </button>
+      </div>
     </div>
   </div>
 
-  <div class="results-grid">
+  <div id="batchResults" class="info-card" style="display:none">
+    <div class="info-card-header">
+      <h3>📋 批量检测结果</h3>
+    </div>
+    <div class="info-card-content" id="batchResultsContent">
+    </div>
+  </div>
+
+  <div class="results-grid" id="singleResults">
     <div class="info-card">
       <div class="info-card-header">
         <h3>📥 入口信息</h3>
@@ -216,8 +263,12 @@ socks5://host:1080<br><br>
 # HTTP 代理（有认证）<br>
 http://username:password@host:8080<br><br>
 # IPv6 地址需要用方括号<br>
-socks5://username:password@[2001:db8::1]:1080
+socks5://username:password@[2001:db8::1]:1080<br><br>
+# 省略协议前缀（自动识别）<br>
+username:password@host:1080<br>
+host:8080
     </div>
+    <p style="font-size:.85rem;margin-top:8px"><strong>自动识别规则：</strong>端口 443/8443 → HTTPS，端口 80/8080/3128 等 → HTTP，端口 1080/10808 等 → SOCKS5</p>
     <h3>入口信息 vs 出口信息</h3>
     <p><strong>入口信息：</strong>代理服务器本身的 IP 地址信息（地理位置、ASN、风险评分等）</p>
     <p><strong>出口信息：</strong>通过代理后实际出口的 IP 地址信息，代表你的真实网络身份</p>
@@ -231,6 +282,18 @@ socks5://username:password@[2001:db8::1]:1080
     <h3>检测代理</h3>
     <div class="code-block"><span class="method">GET</span> /check?proxy=<span class="highlight">socks5://user:pass@host:port</span></div>
     <p style="font-size:.85rem">也支持简写格式：<code style="background:var(--bg-input);padding:2px 6px;border-radius:4px;border:1px solid var(--border)">/check?socks5=user:pass@host:port</code></p>
+    
+    <h3>批量检测代理</h3>
+    <div class="code-block"><span class="method">POST</span> /batch-check<br><br>
+{<br>
+&nbsp;&nbsp;"type": "proxy",<br>
+&nbsp;&nbsp;"items": [<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"socks5://user:pass@1.2.3.4:1080",<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"http://user:pass@5.6.7.8:8080"<br>
+&nbsp;&nbsp;]<br>
+}</div>
+    <p style="font-size:.85rem;margin-top:6px">最多支持 50 个代理同时检测</p>
+    
     <h3>使用示例</h3>
     <div class="code-block">curl "${curlExample}"</div>
     <h3>响应字段</h3>
@@ -262,6 +325,34 @@ socks5://username:password@[2001:db8::1]:1080
   var currentDomainInfo = null;
   var currentProxyTemplate = null;
   var pathToken = ${safeToken};
+  var currentMode = 'single';
+
+  function switchMode(mode) {
+    currentMode = mode;
+    var singleTab = document.getElementById('singleTabBtn');
+    var batchTab = document.getElementById('batchTabBtn');
+    var singleMode = document.getElementById('singleMode');
+    var batchMode = document.getElementById('batchMode');
+    var singleResults = document.getElementById('singleResults');
+    var batchResults = document.getElementById('batchResults');
+    
+    if (mode === 'single') {
+      singleTab.classList.add('active');
+      batchTab.classList.remove('active');
+      singleMode.style.display = 'block';
+      batchMode.style.display = 'none';
+      singleResults.style.display = 'grid';
+      batchResults.style.display = 'none';
+    } else {
+      singleTab.classList.remove('active');
+      batchTab.classList.add('active');
+      singleMode.style.display = 'none';
+      batchMode.style.display = 'block';
+      singleResults.style.display = 'none';
+      batchResults.style.display = 'block';
+    }
+  }
+  window.switchMode = switchMode;
 
   function showToast(msg, dur) {
     dur = dur || 3000;
@@ -269,6 +360,35 @@ socks5://username:password@[2001:db8::1]:1080
     t.textContent = msg;
     t.classList.add("show");
     setTimeout(function() { t.classList.remove("show"); }, dur);
+  }
+
+  function autoDetectProtocol(rawParam) {
+    var port = 1080;
+    var atIdx = rawParam.lastIndexOf('@');
+    var hostPart = atIdx === -1 ? rawParam : rawParam.substring(atIdx + 1);
+    
+    if (hostPart.indexOf(']:') !== -1) {
+      port = parseInt(hostPart.split(']:')[1].replace(/\D/g, '')) || 443;
+    } else if (hostPart.charAt(0) === '[') {
+      port = 443;
+    } else {
+      var parts = hostPart.split(':');
+      if (parts.length >= 2) {
+        port = parseInt(parts[parts.length - 1].replace(/\D/g, '')) || 1080;
+      }
+    }
+
+    var httpPorts = [80, 8080, 3128, 8888, 8000, 9000];
+    var httpsPorts = [443, 8443];
+    var socks5Ports = [1080, 10808, 10809, 9050, 7890];
+    var socks4Ports = [1081];
+
+    if (httpsPorts.indexOf(port) !== -1) return { protocol: 'https' };
+    if (httpPorts.indexOf(port) !== -1) return { protocol: 'http' };
+    if (socks4Ports.indexOf(port) !== -1) return { protocol: 'socks4' };
+    if (socks5Ports.indexOf(port) !== -1) return { protocol: 'socks5' };
+    
+    return { protocol: 'socks5' };
   }
 
   if (pathToken) {
@@ -281,7 +401,12 @@ socks5://username:password@[2001:db8::1]:1080
     var p = input.trim();
     if (p.indexOf("#") !== -1) p = p.split("#")[0].trim();
     while (p.charAt(0) === "/") p = p.substring(1);
-    if (p.indexOf("://") === -1) p = "socks5://" + p;
+    
+    if (p.indexOf("://") === -1) {
+      var detected = autoDetectProtocol(p);
+      p = detected.protocol + "://" + p;
+    }
+    
     var parts = p.split("://");
     var scheme = parts[0];
     var rest = parts[1];
@@ -573,8 +698,127 @@ socks5://username:password@[2001:db8::1]:1080
     if (e.key === "Enter") checkProxy();
   });
   document.getElementById("checkBtn").addEventListener("click", checkProxy);
-})();
-<\/script>
+  document.getElementById("batchCheckBtn").addEventListener("click", batchCheckProxy);
+
+  async function batchCheckProxy() {
+    var textarea = document.getElementById("batchInput");
+    var btn = document.getElementById("batchCheckBtn");
+    var btnText = btn.querySelector('.btn-text');
+    var spinner = btn.querySelector('.loading-spinner');
+    var resultsContent = document.getElementById("batchResultsContent");
+    
+    var rawInput = textarea.value.trim();
+    if (!rawInput) {
+      showToast("请输入要检测的代理列表");
+      textarea.focus();
+      return;
+    }
+    
+    var items = rawInput.split(/\n/)
+      .map(function(line) { return line.trim(); })
+      .filter(function(line) { return line && !line.startsWith('#'); });
+    
+    if (items.length === 0) {
+      showToast("未找到有效的代理链接");
+      return;
+    }
+    
+    if (items.length > 50) {
+      showToast("最多支持 50 个代理同时检测");
+      return;
+    }
+    
+    btn.disabled = true;
+    btnText.style.display = 'none';
+    spinner.style.display = 'block';
+    resultsContent.innerHTML = '<div class="loading"><div class="loading-spinner"></div>正在批量检测 ' + items.length + ' 个代理...</div>';
+    
+    try {
+      var headers = { 'Content-Type': 'application/json' };
+      var body = JSON.stringify({ type: 'proxy', items: items });
+      var url = '/batch-check';
+      if (pathToken) url += '?token=' + encodeURIComponent(pathToken);
+      
+      var resp = await fetch(url, { method: 'POST', headers: headers, body: body });
+      var data = await resp.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || '批量检测失败');
+      }
+      
+      renderBatchResults(data, resultsContent);
+    } catch (e) {
+      resultsContent.innerHTML = '<div class="error">批量检测失败: ' + e.message + '</div>';
+    } finally {
+      btn.disabled = false;
+      btnText.style.display = 'block';
+      spinner.style.display = 'none';
+    }
+  }
+
+  function renderBatchResults(data, container) {
+    var total = data.total;
+    var successCount = data.successCount;
+    var failCount = data.failCount;
+    var responseTime = data.responseTime;
+    var results = data.results;
+    
+    var successItems = results.filter(function(r) { return r.success; });
+    var failItems = results.filter(function(r) { return !r.success; });
+    
+    var html = '<div class="batch-summary">';
+    html += '<div class="batch-stat"><span class="batch-stat-label">总计:</span><span class="batch-stat-value">' + total + '</span></div>';
+    html += '<div class="batch-stat"><span class="batch-stat-label">成功:</span><span class="batch-stat-value success">' + successCount + '</span></div>';
+    html += '<div class="batch-stat"><span class="batch-stat-label">失败:</span><span class="batch-stat-value error">' + failCount + '</span></div>';
+    html += '<div class="batch-stat"><span class="batch-stat-label">耗时:</span><span class="batch-stat-value">' + (responseTime / 1000).toFixed(2) + 's</span></div>';
+    html += '</div>';
+    
+    if (successItems.length > 0) {
+      html += '<div style="margin-bottom:12px;font-weight:600;color:var(--success)">✅ 可用代理 (' + successItems.length + ')</div>';
+      html += '<div class="batch-list">';
+      successItems.forEach(function(item) {
+        var proxyDisplay = item.proxy || item.input;
+        if (proxyDisplay.length > 50) proxyDisplay = proxyDisplay.substring(0, 50) + '...';
+        html += '<div class="batch-item">';
+        html += '<div class="batch-item-info">';
+        html += '<span class="batch-item-proxy">' + proxyDisplay + '</span>';
+        if (item.ip) {
+          html += '<span class="tag tag-country">' + item.ip + '</span>';
+        }
+        html += '</div>';
+        html += '<div class="batch-item-status">';
+        if (item.responseTime) {
+          html += '<span class="status-yes">' + (item.responseTime / 1000).toFixed(2) + 's</span>';
+        } else {
+          html += '<span class="status-no">可用</span>';
+        }
+        html += '</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+    
+    if (failItems.length > 0) {
+      html += '<div style="margin:16px 0 12px;font-weight:600;color:var(--error)">❌ 不可用代理 (' + failItems.length + ')</div>';
+      html += '<div class="batch-list">';
+      failItems.forEach(function(item) {
+        var proxyDisplay = item.proxy || item.input;
+        if (proxyDisplay.length > 50) proxyDisplay = proxyDisplay.substring(0, 50) + '...';
+        html += '<div class="batch-item">';
+        html += '<div class="batch-item-info">';
+        html += '<span class="batch-item-proxy">' + proxyDisplay + '</span>';
+        html += '</div>';
+        html += '<div class="batch-item-status">';
+        html += '<span class="status-yes">失效</span>';
+        html += '</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+    
+    container.innerHTML = html;
+  }
+})();<\/script>
 </body>
 </html>`;
 }

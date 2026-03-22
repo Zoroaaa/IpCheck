@@ -226,6 +226,40 @@ export async function SOCKS5可用性验证(protocol, rawParam) {
 }
 
 /**
+ * 根据端口号自动识别代理协议
+ * @param {string} rawParam - 原始参数（不含协议前缀）
+ * @returns {{ protocol: string, rawParam: string }}
+ */
+function autoDetectProtocol(rawParam) {
+  let port = 1080;
+  const atIdx = rawParam.lastIndexOf('@');
+  const hostPart = atIdx === -1 ? rawParam : rawParam.substring(atIdx + 1);
+  
+  if (hostPart.includes(']:')) {
+    port = parseInt(hostPart.split(']:')[1].replace(/\D/g, '')) || 443;
+  } else if (hostPart.startsWith('[')) {
+    port = 443;
+  } else {
+    const parts = hostPart.split(':');
+    if (parts.length >= 2) {
+      port = parseInt(parts[parts.length - 1].replace(/\D/g, '')) || 1080;
+    }
+  }
+
+  const httpPorts = [80, 8080, 3128, 8888, 8000, 9000];
+  const httpsPorts = [443, 8443];
+  const socks5Ports = [1080, 10808, 10809, 9050, 7890];
+  const socks4Ports = [1081];
+
+  if (httpsPorts.includes(port)) return { protocol: 'https', rawParam };
+  if (httpPorts.includes(port)) return { protocol: 'http', rawParam };
+  if (socks4Ports.includes(port)) return { protocol: 'socks4', rawParam };
+  if (socks5Ports.includes(port)) return { protocol: 'socks5', rawParam };
+  
+  return { protocol: 'socks5', rawParam };
+}
+
+/**
  * /check?proxy=... / ?socks5=... / ?http=... 路由处理器（SOCKS5/HTTP 模式）
  */
 export async function handleCheckProxy(url) {
@@ -239,9 +273,15 @@ export async function handleCheckProxy(url) {
     const p = url.searchParams.get('proxy');
     const lower = p.toLowerCase();
     if (lower.startsWith('socks5://')) { protocol = 'socks5'; rawParam = p.slice(9); }
+    else if (lower.startsWith('socks4://')) { protocol = 'socks4'; rawParam = p.slice(9); }
+    else if (lower.startsWith('socks://')) { protocol = 'socks5'; rawParam = p.slice(8); }
     else if (lower.startsWith('https://')) { protocol = 'https'; rawParam = p.slice(8); }
     else if (lower.startsWith('http://')) { protocol = 'http'; rawParam = p.slice(7); }
-    else { return new Response(JSON.stringify({ success: false, error: '不支持的代理协议，请使用 socks5:// 或 http://' }, null, 2), { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }); }
+    else {
+      const detected = autoDetectProtocol(p);
+      protocol = detected.protocol;
+      rawParam = detected.rawParam;
+    }
   } else {
     return new Response(JSON.stringify({ success: false, error: '请提供有效的代理参数：socks5、http 或 proxy' }, null, 2), { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
   }

@@ -33,6 +33,7 @@ import { 整理, 随机取, nginx, 代理URL, resolveDomain, jsonResp } from './
 import { handleIpInfo } from './src/ipInfo.js';
 import { handleCheckProxyIP } from './src/checkProxyIP.js';
 import { handleCheckProxy } from './src/checkProxy.js';
+import { handleBatchCheck } from './src/batchCheck.js';
 import { renderProxyIPPage } from './src/pageProxyIP.js';
 import { renderProxyPage } from './src/pageProxy.js';
 
@@ -152,6 +153,17 @@ export default {
         return handleCheckProxy(url);
       }
       return jsonResp({ success: false, error: '请提供 proxyip、proxy、socks5 或 http 参数' }, 400);
+    }
+
+    // --- /batch-check ---
+    if (实际路径 === '/batch-check') {
+      const authErr = requireToken();
+      if (authErr) return authErr;
+      
+      const rateErr = checkApiRateLimit();
+      if (rateErr) return rateErr;
+      
+      return handleBatchCheck(request, url);
     }
 
     // --- /resolve ---
@@ -308,6 +320,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
 .api-table code{background:linear-gradient(135deg,#eef2ff,#f1f5f9);padding:5px 10px;border-radius:6px;font-family:'SF Mono',Monaco,Consolas,monospace;font-size:.85rem;color:var(--primary-dark);border:1px solid #e2e8f0}
 .badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:6px;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
 .badge-get{background:linear-gradient(135deg,#dcfce7,#d1fae5);color:#16a34a;border:1px solid #a7f3d0}
+.badge-post{background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#2563eb;border:1px solid #93c5fd}
 .footer{text-align:center;padding:40px 0;color:var(--text-muted);font-size:.9rem;border-top:1px solid var(--border);margin-top:20px}
 .footer a{color:var(--primary);text-decoration:none;font-weight:500}
 .footer a:hover{text-decoration:underline}
@@ -377,6 +390,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans
         <tr><td><span class="badge badge-get">GET</span></td><td><code>/check?proxy=socks5://user:pass@host:port</code></td><td>检测 SOCKS5/HTTP 代理</td></tr>
         <tr><td><span class="badge badge-get">GET</span></td><td><code>/check?socks5=user:pass@host:port</code></td><td>检测 SOCKS5（简写）</td></tr>
         <tr><td><span class="badge badge-get">GET</span></td><td><code>/check?http=user:pass@host:port</code></td><td>检测 HTTP（简写）</td></tr>
+        <tr><td><span class="badge badge-post">POST</span></td><td><code>/batch-check</code></td><td>批量检测 ProxyIP 或代理（最多 50 个）</td></tr>
         <tr><td><span class="badge badge-get">GET</span></td><td><code>/resolve?domain=example.com</code></td><td>解析域名返回所有 IP</td></tr>
         <tr><td><span class="badge badge-get">GET</span></td><td><code>/ip-info?ip=1.2.3.4</code></td><td>查询 IP 详情（ipapi.is）</td></tr>
       </tbody>
