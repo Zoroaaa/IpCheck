@@ -136,13 +136,12 @@ export default {
     // Socks5/HTTP 专属页
     if (实际路径 === '/proxy') {
       const ico = env.ICO || '';
-      const beian = env.BEIAN || '&copy; 2025 Check Proxy - 基于 Cloudflare Workers 构建的高性能代理验证服务 | IP数据来源: ipapi.is | by: cmliu';
       let bgStyle = 'background: #f5f5f5;';
       if (env.IMG) {
         const imgs = await 整理(env.IMG);
         bgStyle = `background-image: url('${随机取(imgs)}');`;
       }
-      return new Response(renderProxyPage(ico, beian, bgStyle, 路径TOKEN), {
+      return new Response(renderProxyPage(hostname, ico, bgStyle, 路径TOKEN), {
         headers: { 'Content-Type': 'text/html; charset=UTF-8' },
       });
     }
@@ -241,7 +240,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:linear-gradient(135d
   </div>
 
   <div class="footer">
-    © 2025 Proxy Checker · 基于 Cloudflare Workers 构建 · by cmliu
+    © 2025 Proxy Checker · 基于 Cloudflare Workers 构建
   </div>
 </div>
 </body>
